@@ -33,14 +33,15 @@
 /******************************************************************************************/
 
 void adc_init(void);                                           /* ADC初始化函数 */
-void adc_channel_set(ADC_HandleTypeDef *adc_handle, uint32_t ch, uint32_t rank, uint32_t stime);    /* 配置ADC通道 */
+// void adc_channel_set(ADC_HandleTypeDef *adc_handle, uint32_t ch, uint32_t rank, uint32_t stime);    /* 配置ADC通道 */
 uint32_t adc_get_result(void);                          /* 获得某个通道值  */
-uint32_t adc_get_result_average(uint32_t ch, uint8_t times);   /* 得到某个通道给定次数采样的平均值 */
+// uint32_t adc_get_result_average(uint32_t ch, uint8_t times);   /* 得到某个通道给定次数采样的平均值 */
 
 void adc_dma_init(uint32_t mar);                               /* ADC DMA采集初始化 */
 void adc_dma_enable( uint16_t cndtr);                          /* 使能一次ADC DMA采集传输 */
 
 void adc_nch_dma_init(uint32_t mar);
+void adc_over_dma_init(uint32_t mar);
 
 
 #endif 

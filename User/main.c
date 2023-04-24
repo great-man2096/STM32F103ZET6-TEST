@@ -80,7 +80,61 @@ int main(void)
 	lcd_init();							/* LCD初始化 */
 
 	//单通道ADC过采样（12转16分辨率）
-	
+	/* ADC过采样技术, 是利用ADC多次采集的方式, 来提高ADC精度, 采样速度每提高4倍
+ * 采样精度提高 1bit, 同时, ADC采样速度降低4倍, 如提高4bit精度, 需要256次采集
+ * 才能得出1次数据, 相当于ADC速度慢了256倍. 理论上只要ADC足够快, 我们可以无限
+ * 提高ADC精度, 但实际上ADC并不是无限快的, 而且由于ADC性能限制, 并不是位数无限
+ * 提高结果就越好, 需要根据自己的实际需求和ADC的实际性能来权衡.
+ */
+	#define ADC_OVERSAMPLE_TIMES    256                         /* ADC过采样次数, 这里提高4bit分辨率, 需要256倍采样 */
+	#define ADC_DMA_BUF_SIZE        ADC_OVERSAMPLE_TIMES * 10   /* ADC DMA采集 BUF大小, 应等于过采样次数的整数倍 */
+
+	uint16_t g_adc_dma_buf[ADC_DMA_BUF_SIZE];                   /* ADC DMA BUF */
+
+	extern uint8_t g_adc_dma_sta;                               /* DMA传输状态标志, 0,未完成; 1, 已完成 */
+	adc_over_dma_init((uint32_t)&g_adc_dma_buf);     			/* 初始化ADC DMA采集 */
+
+    lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    lcd_show_string(30,  70, 200, 16, 16, "ADC OverSample TEST", RED);
+    lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    lcd_show_string(30, 110, 200, 16, 16, "ADC1_CH1_VAL:", BLUE);
+    lcd_show_string(30, 130, 200, 16, 16, "ADC1_CH1_VOL:0.000V", BLUE); /* 先在固定位置显示小数点 */
+
+    adc_dma_enable(ADC_DMA_BUF_SIZE);           /* 启动ADC DMA采集 */
+
+    while (1)
+    {
+        if (g_adc_dma_sta == 1)
+        {
+            /* 计算DMA 采集到的ADC数据的平均值 */
+            sum = 0;
+
+            for (i = 0; i < ADC_DMA_BUF_SIZE; i++)   /* 累加 */
+            {
+                sum += g_adc_dma_buf[i];
+            }
+
+            adcx = sum / (ADC_DMA_BUF_SIZE / ADC_OVERSAMPLE_TIMES); /* 取平均值 */
+            adcx >>= 4;   /* 除以2^4倍, 得到12+4位 ADC精度值, 注意: 提高 N bit精度, 需要 >> N */
+
+            /* 显示结果 */
+            lcd_show_xnum(134, 110, adcx, 5, 16, 0, BLUE);      /* 显示ADCC采样后的原始值 */
+
+            temp = (float)adcx * (3.3 / 65536);                 /* 获取计算后的带小数的实际电压值，比如3.1111 */
+            adcx = temp;                                        /* 赋值整数部分给adcx变量，因为adcx为u16整形 */
+            lcd_show_xnum(134, 130, adcx, 1, 16, 0, BLUE);      /* 显示电压值的整数部分，3.1111的话，这里就是显示3 */
+
+            temp -= adcx;                                       /* 把已经显示的整数部分去掉，留下小数部分，比如3.1111-3=0.1111 */
+            temp *= 1000;                                       /* 小数部分乘以1000，例如：0.1111就转换为111.1，相当于保留三位小数。 */
+            lcd_show_xnum(150, 130, temp, 3, 16, 0X80, BLUE);   /* 显示小数部分（前面转换为了整形显示），这里显示的就是111. */
+
+            g_adc_dma_sta = 0;                                  /* 清除DMA采集完成状态标志 */
+            adc_dma_enable(ADC_DMA_BUF_SIZE);                   /* 启动下一次ADC DMA采集 */
+        }
+
+        LED0_TOGGLE();
+        delay_ms(100);
+    }
 
 
 	// 多通道ADC用DMA采集实验
