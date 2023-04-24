@@ -1,10 +1,50 @@
 #include "./BSP/ADC/adc.h"
+#include "adc.h"
 
 ADC_HandleTypeDef g_adc_handler;
 
 DMA_HandleTypeDef g_dma_adc_handler;
 
-uint8_t g_adc_dma_sta;
+uint8_t g_adc_dma_sta = 0;
+
+
+//ADC温度传感器初始化
+void adc_temperature_init(void)
+{
+	
+	ADC_ChannelConfTypeDef adc_ch_conf = {0};
+
+	g_adc_handler.Instance = ADC1;
+	g_adc_handler.Init.DataAlign = ADC_DATAALIGN_RIGHT;		  /* 设置数据的对齐方式：右对齐 */
+	g_adc_handler.Init.ScanConvMode = ADC_SCAN_DISABLE;		  /* 扫描模式：不开启 */
+	g_adc_handler.Init.ContinuousConvMode = DISABLE;		  /* 开启连续转换模式否则就是单次转换模式：单次转换模式 */
+	g_adc_handler.Init.NbrOfConversion = 1;					  /* 设置转换通道数目 */
+	g_adc_handler.Init.DiscontinuousConvMode = DISABLE;		  /* 是否使用规则通道组间断模式 */
+	g_adc_handler.Init.NbrOfDiscConversion = 0;				  /* 配置间断模式的规则通道个数 */
+	g_adc_handler.Init.ExternalTrigConv = ADC_SOFTWARE_START; /* ADC 外部触发源选择 */
+	HAL_ADC_Init(&g_adc_handler);							  // 初始化
+
+	HAL_ADCEx_Calibration_Start(&g_adc_handler); // ADC校准
+
+	adc_ch_conf.Channel = ADC_CHANNEL_TEMPSENSOR;				   // ADC 转换通道，专门测内部温度的
+	adc_ch_conf.Rank = ADC_REGULAR_RANK_1;				   // ADC 转换顺序
+	adc_ch_conf.SamplingTime = ADC_SAMPLETIME_239CYCLES_5; // 采样时间
+
+	HAL_ADC_ConfigChannel(&g_adc_handler, &adc_ch_conf); // 配置ADC通道
+}
+//获取温度值
+short adc_get_temperature(void)
+{
+	uint32_t adcx;
+    short result;
+    double temperature;
+
+    adcx = adc_get_result();  /* 读取内部温度传感器通道 */
+    temperature = (float)adcx * (3.3 / 4096);               /* 转化为电压值 */
+    temperature = (1.43 - temperature) / 0.0043 + 25;       /* 计算温度 */
+    result = temperature *= 100;                            /* 扩大100倍. */
+    return result;
+}
 
 //过采集实验初始化
 void adc_over_dma_init(uint32_t mar)

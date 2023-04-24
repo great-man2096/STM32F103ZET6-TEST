@@ -43,6 +43,8 @@ void adc_dma_enable( uint16_t cndtr);                          /* 使能一次ADC DM
 void adc_nch_dma_init(uint32_t mar);
 void adc_over_dma_init(uint32_t mar);
 
+void adc_temperature_init(void);
+short adc_get_temperature(void);
 
 #endif 
 
