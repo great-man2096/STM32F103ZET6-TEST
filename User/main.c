@@ -17,6 +17,7 @@
  ******************************************************************************
  */
 #include "string.h"
+#include "math.h"
 #include "./SYSTEM/sys/sys.h"
 #include "./SYSTEM/usart/usart.h"
 #include "./SYSTEM/delay/delay.h"
@@ -73,6 +74,31 @@ void showtime(void)
 //  #define ADC_DMA_BUF_SIZE        ADC_OVERSAMPLE_TIMES * 10   /* ADC DMA采集 BUF大小, 应等于过采样次数的整数倍 */
 //  uint16_t g_adc_dma_buf[ADC_DMA_BUF_SIZE];                   /* ADC DMA BUF */
 //  extern uint8_t g_adc_dma_sta;                               /* DMA传输状态标志, 0,未完成; 1, 已完成 */
+extern uint16_t g_dac_sin_buf[4096];
+/**
+ * @brief       产生正弦波函序列
+ *   @note      需保证: maxval > samples/2
+ *
+ * @param       maxval : 最大值(0 < maxval < 2048)
+ * @param       samples: 采样点的个数
+ *
+ * @retval      无
+ */
+void dac_creat_sin_buf(uint16_t maxval, uint16_t samples)
+{
+	uint8_t i;
+	float inc = (2 * 3.1415962) / samples; /* 计算增量（一个周期DAC_SIN_BUF个点）*/
+	float outdata = 0;
+
+	for (i = 0; i < samples; i++)
+	{
+		outdata = maxval * (1 + sin(inc * i)); /* 计算以dots个点为周期的每个点的值，放大maxval倍，并偏移到正数区域 */
+		if (outdata > 4095)
+			outdata = 4095; /* 上限限定 */
+		// printf("%f\r\n",outdata);
+		g_dac_sin_buf[i] = outdata;
+	}
+}
 
 int main(void)
 {
@@ -86,88 +112,188 @@ int main(void)
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
 
-// 	//DAC实验,通过按键控制输出电压，并且采集电压在显示器上显示
-	adc_init();                             /* 初始化ADC */
-	dac_init(1);								/* 初始化DAC */
+	/******************************************************
+	DAC实验,正弦波实验
+	*******************************************************/
+	adc_init();
+
+	lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    lcd_show_string(30,  70, 200, 16, 16, "DAC DMA Sine WAVE TEST", RED);
+    lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    lcd_show_string(30, 110, 200, 16, 16, "KEY0:3Khz  KEY1:30Khz", RED);
+
+    lcd_show_string(30, 130, 200, 16, 16, "DAC VAL:", BLUE);
+    lcd_show_string(30, 150, 200, 16, 16, "DAC VOL:0.000V", BLUE);
+    lcd_show_string(30, 170, 200, 16, 16, "ADC VOL:0.000V", BLUE);
+
 	uint16_t adcx;
     float temp;
-    uint16_t dacval = 0;
-
-	dac_set_voltage(1,3300); //1222
-
-	lcd_show_string(30, 30, 200, 32, 32, "STM32", RED);
-	lcd_show_string(30, 70, 200, 16, 16, "ADC TEST", RED);
-	lcd_show_string(30, 90, 200, 16, 16, "YSC@burningCloud", RED);
-	lcd_show_string(30, 110, 200, 16, 16, "ADC1_CH0_VAL:", BLUE);
-	lcd_show_string(30, 130, 200, 16, 16, "ADC1_CH0_VOL:0.000V", BLUE); /* 先在固定位置显示小数点 */
-
+	uint8_t t = 0;
+	dac_dma_wave_init();
+	dac_creat_sin_buf(2048, 100);
+	dac_dma_wave_enable(100, 10 - 1, 72 - 1);
 	while (1)
 	{
-		if (key1_scan())
+		t++;
+		if (key1_scan())                               /* 高采样率 , 约1Khz波形 */
         {
-            if (dacval < 4000)dacval += 200;
-
-            dac_set_voltage(2,dacval);/* 输出增大200 */
-			printf("PA5电压设置为%d\r\n",dacval);
+            dac_creat_sin_buf(2048, 100);
+            dac_dma_wave_enable(100, 10 - 1, 24 - 1);       /* 300Khz触发频率, 100个点, 得到最高3KHz的正弦波. */
         }
-        else if (key2_scan())
+        else if (key2_scan())                          /* 低采样率 , 约1Khz波形 */
         {
-            if (dacval > 200)dacval -= 200;
-            else dacval = 0;
-
-            dac_set_voltage(2,dacval); /* 输出减少200 */
-			printf("PA5电压设置为%d\r\n",dacval);
+            dac_creat_sin_buf(2048, 10);
+            dac_dma_wave_enable(10, 10 - 1, 24 - 1);        /* 300Khz触发频率, 10个点, 可以得到最高30KHz的正弦波. */
         }
-		adcx = adc_get_result(); /* 获取通道0的转换值，10次取平均 */
-		lcd_show_xnum(134, 110, adcx, 5, 16, 0, BLUE);   /* 显示ADCC采样后的原始值 */
 
-		temp = (float)adcx * (3.3 / 4096);               /* 获取计算后的带小数的实际电压值，比如3.1111 */
-		adcx = temp;                                     /* 赋值整数部分给adcx变量，因为adcx为u16整形 */
-		lcd_show_xnum(134, 130, adcx, 1, 16, 0, BLUE);   /* 显示电压值的整数部分，3.1111的话，这里就是显示3 */
+        adcx = DAC1->DHR12R1;                               /* 获取DAC1_OUT1的输出状态 */
+        lcd_show_xnum(94, 130, adcx, 4, 16, 0, BLUE);       /* 显示DAC寄存器值 */
 
-		temp -= adcx;                                    /* 把已经显示的整数部分去掉，留下小数部分，比如3.1111-3=0.1111 */
-		temp *= 1000;                                    /* 小数部分乘以1000，例如：0.1111就转换为111.1，相当于保留三位小数。 */
-		lcd_show_xnum(150, 130, temp, 3, 16, 0X80, BLUE);/* 显示小数部分（前面转换为了整形显示），这里显示的就是111. */
+        temp = (float)adcx * (3.3 / 4096);                  /* 得到DAC电压值 */
+        adcx = temp;
+        lcd_show_xnum(94, 150, temp, 1, 16, 0, BLUE);       /* 显示电压值整数部分 */
 
-		showtime();
+        temp -= adcx;
+        temp *= 1000;
+        lcd_show_xnum(110, 150, temp, 3, 16, 0X80, BLUE);   /* 显示电压值的小数部分 */
 
+        adcx = adc_get_result();       /* 得到ADC1通道2的转换结果 */
+        temp = (float)adcx * (3.3 / 4096);                  /* 得到ADC电压值(adc是12bit的) */
+        adcx = temp;
+        lcd_show_xnum(94, 170, temp, 1, 16, 0, BLUE);       /* 显示电压值整数部分 */
 
-		LED0_TOGGLE();
-		delay_ms(100);
+        temp -= adcx;
+        temp *= 1000;
+        lcd_show_xnum(110, 170, temp, 3, 16, 0X80, BLUE);   /* 显示电压值的小数部分 */
+
+        if (t == 40)        /* 定时时间到了 */
+        {
+            LED0_TOGGLE();  /* LED0闪烁 */
+            t = 0;
+        }
+
+        delay_ms(5);
 	}
+	
 
+	/******************************************************
+	DAC实验,三角波实验
+	*******************************************************/
+	// dac_init(1);                        /* 初始化DAC1_OUT1通道 */
+	// uint8_t t = 0;
+	// lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+	// lcd_show_string(30,  70, 200, 16, 16, "DAC Triangular WAVE TEST", RED);
+	// lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+	// lcd_show_string(30, 110, 200, 16, 16, "KEY0:Wave1  KEY1:Wave2", RED);
+	// lcd_show_string(30, 130, 200, 16, 16, "DAC None", BLUE); /* 提示无输出 */
 
+	// while (1)
+	// {
+	//     t++;
 
-    //内部温度传感器实验
-	// short temp;
-	// adc_temperature_init();                     /* 初始化ADC内部温度传感器采集 */
+	//     if (key1_scan())                        /* 高采样率 , 约1Khz波形 */
+	//     {
+	//         lcd_show_string(30, 130, 200, 16, 16, "DAC Wave1 ", BLUE);
+	//         dac_triangular_wave(4095, 5, 2000, 100); /* 幅值4095, 采样点间隔5us, 200个采样点, 100个波形 */
+	//         lcd_show_string(30, 130, 200, 16, 16, "DAC None  ", BLUE);
+	//     }
+	//     else if (key2_scan())                   /* 低采样率 , 约1Khz波形 */
+	//     {
+	//         lcd_show_string(30, 130, 200, 16, 16, "DAC Wave2 ", BLUE);
+	//         dac_triangular_wave(4095, 500, 20, 100); /* 幅值4095, 采样点间隔500us, 20个采样点, 100个波形 */
+	//         lcd_show_string(30, 130, 200, 16, 16, "DAC None  ", BLUE);
+	//     }
 
-    // lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
-    // lcd_show_string(30,  70, 200, 16, 16, "Temperature TEST", RED);
-    // lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
-    // lcd_show_string(30, 120, 200, 16, 16, "TEMPERATE: 00.00C", BLUE);
+	//     if (t == 10)                                 /* 定时时间到了 */
+	//     {
+	//         LED0_TOGGLE();                           /* LED0闪烁 */
+	//         t = 0;
+	//     }
 
-    // while (1)
-    // {
+	//     delay_ms(10);
+	// }
 
-    //     temp = adc_get_temperature();   /* 得到温度值 */
+	/******************************************************
+	DAC实验,通过按键控制输出电压，并且采集电压在显示器上显示
+	*******************************************************/
+	// adc_init();                             /* 初始化ADC */
+	// dac_init(1);								/* 初始化DAC */
+	// uint16_t adcx;
+	// float temp;
+	// uint16_t dacval = 0;
 
-    //     if (temp < 0)
-    //     {
-    //         temp = -temp;
-    //         lcd_show_string(30 + 10 * 8, 120, 16, 16, 16, "-", BLUE);   /* 显示负号 */
-    //     }
-    //     else
-    //     {
-    //         lcd_show_string(30 + 10 * 8, 120, 16, 16, 16, " ", BLUE);   /* 无符号 */
-    //     }
-    //     lcd_show_xnum(30 + 11 * 8, 120, temp / 100, 2, 16, 0, BLUE);    /* 显示整数部分 */
-    //     lcd_show_xnum(30 + 14 * 8, 120, temp % 100, 2, 16, 0X80, BLUE); /* 显示小数部分 */
-        
+	// dac_set_voltage(1,3300); //1222
+
+	// lcd_show_string(30, 30, 200, 32, 32, "STM32", RED);
+	// lcd_show_string(30, 70, 200, 16, 16, "ADC TEST", RED);
+	// lcd_show_string(30, 90, 200, 16, 16, "YSC@burningCloud", RED);
+	// lcd_show_string(30, 110, 200, 16, 16, "ADC1_CH0_VAL:", BLUE);
+	// lcd_show_string(30, 130, 200, 16, 16, "ADC1_CH0_VOL:0.000V", BLUE); /* 先在固定位置显示小数点 */
+
+	// while (1)
+	// {
+	// 	if (key1_scan())
+	//     {
+	//         if (dacval < 4000)dacval += 200;
+
+	//         dac_set_voltage(2,dacval);/* 输出增大200 */
+	// 		printf("PA5电压设置为%d\r\n",dacval);
+	//     }
+	//     else if (key2_scan())
+	//     {
+	//         if (dacval > 200)dacval -= 200;
+	//         else dacval = 0;
+
+	//         dac_set_voltage(2,dacval); /* 输出减少200 */
+	// 		printf("PA5电压设置为%d\r\n",dacval);
+	//     }
+	// 	adcx = adc_get_result(); /* 获取通道0的转换值，10次取平均 */
+	// 	lcd_show_xnum(134, 110, adcx, 5, 16, 0, BLUE);   /* 显示ADCC采样后的原始值 */
+
+	// 	temp = (float)adcx * (3.3 / 4096);               /* 获取计算后的带小数的实际电压值，比如3.1111 */
+	// 	adcx = temp;                                     /* 赋值整数部分给adcx变量，因为adcx为u16整形 */
+	// 	lcd_show_xnum(134, 130, adcx, 1, 16, 0, BLUE);   /* 显示电压值的整数部分，3.1111的话，这里就是显示3 */
+
+	// 	temp -= adcx;                                    /* 把已经显示的整数部分去掉，留下小数部分，比如3.1111-3=0.1111 */
+	// 	temp *= 1000;                                    /* 小数部分乘以1000，例如：0.1111就转换为111.1，相当于保留三位小数。 */
+	// 	lcd_show_xnum(150, 130, temp, 3, 16, 0X80, BLUE);/* 显示小数部分（前面转换为了整形显示），这里显示的就是111. */
+
+	// 	showtime();
+
+	// 	LED0_TOGGLE();
+	// 	delay_ms(100);
+	// }
+
+	// 内部温度传感器实验
+	//  short temp;
+	//  adc_temperature_init();                     /* 初始化ADC内部温度传感器采集 */
+
+	// lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+	// lcd_show_string(30,  70, 200, 16, 16, "Temperature TEST", RED);
+	// lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+	// lcd_show_string(30, 120, 200, 16, 16, "TEMPERATE: 00.00C", BLUE);
+
+	// while (1)
+	// {
+
+	//     temp = adc_get_temperature();   /* 得到温度值 */
+
+	//     if (temp < 0)
+	//     {
+	//         temp = -temp;
+	//         lcd_show_string(30 + 10 * 8, 120, 16, 16, 16, "-", BLUE);   /* 显示负号 */
+	//     }
+	//     else
+	//     {
+	//         lcd_show_string(30 + 10 * 8, 120, 16, 16, 16, " ", BLUE);   /* 无符号 */
+	//     }
+	//     lcd_show_xnum(30 + 11 * 8, 120, temp / 100, 2, 16, 0, BLUE);    /* 显示整数部分 */
+	//     lcd_show_xnum(30 + 14 * 8, 120, temp % 100, 2, 16, 0X80, BLUE); /* 显示小数部分 */
+
 	// 	showtime();	//显示时间
-    //     LED0_TOGGLE();  /* LED0闪烁,提示程序运行 */
-    //     delay_ms(250);
-    // }
+	//     LED0_TOGGLE();  /* LED0闪烁,提示程序运行 */
+	//     delay_ms(250);
+	// }
 
 	// 单通道ADC过采样（12转16分辨率）
 	/* ADC过采样技术, 是利用ADC多次采集的方式, 来提高ADC精度, 采样速度每提高4倍

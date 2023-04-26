@@ -1,8 +1,9 @@
 Dependencies for Project 'test02', Target 'test02': (DO NOT MODIFY !)
 CompilerVersion: 5060960::V5.06 update 7 (build 960)::.\ARMCC
 F (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Source\Templates\arm\startup_stm32f103xe.s)(0x60F4DDA4)(--cpu Cortex-M3 -g --apcs=interwork -ID:\MDK5.36\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include--pd "__UVISION_VERSION SETA 536" --pd "STM32F10X_HD SETA 1"--list ..\..\output\startup_stm32f103xe.lst --xref -o ..\..\output\startup_stm32f103xe.o --depend ..\..\output\startup_stm32f103xe.d)
-F (..\..\User\main.c)(0x64486FDC)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers -I ..\..\User -I ..\..\Middlewares-ID:\MDK5.36\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_HAL_DRIVER -DSTM32F103xE-o ..\..\output\main.o --omf_browse ..\..\output\main.crf --depend ..\..\output\main.d)
+F (..\..\User\main.c)(0x6448DF69)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers -I ..\..\User -I ..\..\Middlewares-ID:\MDK5.36\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_HAL_DRIVER -DSTM32F103xE-o ..\..\output\main.o --omf_browse ..\..\output\main.crf --depend ..\..\output\main.d)
 I (D:\MDK5.36\ARM\ARMCC\include\string.h)(0x6025237E)
+I (D:\MDK5.36\ARM\ARMCC\include\math.h)(0x60252378)
 I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x618263F0)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDA4)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6444A2F2)
@@ -77,7 +78,7 @@ I (..\..\Drivers\./BSP/RTC/rtc.h)(0x620B74A5)
 I (..\..\Drivers\./BSP/PWR/pwr.h)(0x60F4DDB5)
 I (..\..\Drivers\./BSP/DMA/dma.h)(0x6440AC1D)
 I (..\..\Drivers\./BSP/ADC/adc.h)(0x644627B9)
-I (..\..\Drivers\./BSP/DAC/dac.h)(0x644779D7)
+I (..\..\Drivers\./BSP/DAC/dac.h)(0x6448D999)
 F (..\..\User\stm32f1xx_it.c)(0x60F4DDA4)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers -I ..\..\User -I ..\..\Middlewares-ID:\MDK5.36\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_HAL_DRIVER -DSTM32F103xE-o ..\..\output\stm32f1xx_it.o --omf_browse ..\..\output\stm32f1xx_it.crf --depend ..\..\output\stm32f1xx_it.d)
 I (..\..\User\stm32f1xx_it.h)(0x60F4DDA4)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h)(0x60F4DDA4)
@@ -2332,8 +2333,8 @@ I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_usb.h)(0x60F4DDA4)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd_ex.h)(0x60F4DDA4)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h)(0x60F4DDA4)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h)(0x60F4DDA4)
-F (..\..\Drivers\BSP\DAC\dac.c)(0x64478244)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers -I ..\..\User -I ..\..\Middlewares-ID:\MDK5.36\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_HAL_DRIVER -DSTM32F103xE-o ..\..\output\dac.o --omf_browse ..\..\output\dac.crf --depend ..\..\output\dac.d)
-I (..\..\Drivers\./BSP/DAC/dac.h)(0x644779D7)
+F (..\..\Drivers\BSP\DAC\dac.c)(0x6448D951)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers -I ..\..\User -I ..\..\Middlewares-ID:\MDK5.36\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_HAL_DRIVER -DSTM32F103xE-o ..\..\output\dac.o --omf_browse ..\..\output\dac.crf --depend ..\..\output\dac.d)
+I (..\..\Drivers\./BSP/DAC/dac.h)(0x6448D999)
 I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x618263F0)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDA4)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6444A2F2)
@@ -2524,7 +2525,7 @@ I (..\..\Drivers\./SYSTEM/delay/delay.h)(0x61826668)
 I (..\..\Drivers\./BSP/LCD/lcd.h)(0x6441F8D1)
 I (D:\MDK5.36\ARM\ARMCC\include\stdlib.h)(0x60252374)
 I (..\..\Drivers\./BSP/RTC/rtc.h)(0x620B74A5)
-I (..\..\Drivers\./BSP/DAC/dac.h)(0x644779D7)
+I (..\..\Drivers\./BSP/DAC/dac.h)(0x6448D999)
 F (..\..\Middlewares\USMART\usmart_port.c)(0x63662020)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers -I ..\..\User -I ..\..\Middlewares-ID:\MDK5.36\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_HAL_DRIVER -DSTM32F103xE-o ..\..\output\usmart_port.o --omf_browse ..\..\output\usmart_port.crf --depend ..\..\output\usmart_port.d)
 I (..\..\Middlewares\./USMART/usmart.h)(0x620C62DF)
 I (..\..\Middlewares\./USMART/usmart_port.h)(0x60F4DDAC)
