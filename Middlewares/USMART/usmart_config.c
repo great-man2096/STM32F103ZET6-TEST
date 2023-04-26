@@ -9,6 +9,7 @@
 #include "./SYSTEM/delay/delay.h"
 #include "./BSP/LCD/lcd.h"
 #include "./BSP/RTC/rtc.h"
+#include "./BSP/DAC/dac.h"
 
 extern void led_set(uint8_t sta);
 extern void test_fun(void(*ledset)(uint8_t), uint8_t sta);
@@ -39,6 +40,8 @@ struct _m_usmart_nametab usmart_nametab[] =
     (void *)lcd_draw_point, "void lcd_draw_point(uint16_t x, uint16_t y, uint16_t color)",
     (void *)lcd_read_point, "uint16_t lcd_read_point(uint16_t x, uint16_t y)",
     (void *)lcd_display_dir, "void lcd_display_dir(uint8_t dir)",
+
+    (void *) dac_set_voltage, "void dac_set_voltage(uint16_t vol)",
 
 
     (void *)led_set, "void led_set(uint8_t sta)",

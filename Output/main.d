@@ -75,3 +75,4 @@
 ..\..\output\main.o: ..\..\Drivers\./BSP/PWR/pwr.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/DMA/dma.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/ADC/adc.h
+..\..\output\main.o: ..\..\Drivers\./BSP/DAC/dac.h

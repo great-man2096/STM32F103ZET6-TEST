@@ -262,12 +262,12 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 
 		gpio_init_struct.Pin = GPIO_PIN_2;
 		gpio_init_struct.Mode = GPIO_MODE_ANALOG;
-		gpio_init_struct.Pull = GPIO_PULLDOWN;
+		// gpio_init_struct.Pull = GPIO_PULLDOWN;
 		HAL_GPIO_Init(GPIOA, &gpio_init_struct);
 
-		gpio_init_struct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
-		gpio_init_struct.Mode = GPIO_MODE_ANALOG;
-		HAL_GPIO_Init(GPIOC, &gpio_init_struct);
+		// gpio_init_struct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
+		// gpio_init_struct.Mode = GPIO_MODE_ANALOG;
+		// HAL_GPIO_Init(GPIOC, &gpio_init_struct);
 
 		adc_clk_init.PeriphClockSelection = RCC_PERIPHCLK_ADC;
 		adc_clk_init.AdcClockSelection = RCC_ADCPCLK2_DIV6;

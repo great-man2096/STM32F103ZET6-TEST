@@ -33,6 +33,7 @@
 #include "./BSP/PWR/pwr.h"
 #include "./BSP/DMA/dma.h"
 #include "./BSP/ADC/adc.h"
+#include "./BSP/DAC/dac.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -85,36 +86,88 @@ int main(void)
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
 
+// 	//DAC实验,通过按键控制输出电压，并且采集电压在显示器上显示
+	adc_init();                             /* 初始化ADC */
+	dac_init(1);								/* 初始化DAC */
+	uint16_t adcx;
+    float temp;
+    uint16_t dacval = 0;
+
+	dac_set_voltage(1,3300); //1222
+
+	lcd_show_string(30, 30, 200, 32, 32, "STM32", RED);
+	lcd_show_string(30, 70, 200, 16, 16, "ADC TEST", RED);
+	lcd_show_string(30, 90, 200, 16, 16, "YSC@burningCloud", RED);
+	lcd_show_string(30, 110, 200, 16, 16, "ADC1_CH0_VAL:", BLUE);
+	lcd_show_string(30, 130, 200, 16, 16, "ADC1_CH0_VOL:0.000V", BLUE); /* 先在固定位置显示小数点 */
+
+	while (1)
+	{
+		if (key1_scan())
+        {
+            if (dacval < 4000)dacval += 200;
+
+            dac_set_voltage(2,dacval);/* 输出增大200 */
+			printf("PA5电压设置为%d\r\n",dacval);
+        }
+        else if (key2_scan())
+        {
+            if (dacval > 200)dacval -= 200;
+            else dacval = 0;
+
+            dac_set_voltage(2,dacval); /* 输出减少200 */
+			printf("PA5电压设置为%d\r\n",dacval);
+        }
+		adcx = adc_get_result(); /* 获取通道0的转换值，10次取平均 */
+		lcd_show_xnum(134, 110, adcx, 5, 16, 0, BLUE);   /* 显示ADCC采样后的原始值 */
+
+		temp = (float)adcx * (3.3 / 4096);               /* 获取计算后的带小数的实际电压值，比如3.1111 */
+		adcx = temp;                                     /* 赋值整数部分给adcx变量，因为adcx为u16整形 */
+		lcd_show_xnum(134, 130, adcx, 1, 16, 0, BLUE);   /* 显示电压值的整数部分，3.1111的话，这里就是显示3 */
+
+		temp -= adcx;                                    /* 把已经显示的整数部分去掉，留下小数部分，比如3.1111-3=0.1111 */
+		temp *= 1000;                                    /* 小数部分乘以1000，例如：0.1111就转换为111.1，相当于保留三位小数。 */
+		lcd_show_xnum(150, 130, temp, 3, 16, 0X80, BLUE);/* 显示小数部分（前面转换为了整形显示），这里显示的就是111. */
+
+		showtime();
+
+
+		LED0_TOGGLE();
+		delay_ms(100);
+	}
+
+
+
     //内部温度传感器实验
-	short temp;
-	adc_temperature_init();                     /* 初始化ADC内部温度传感器采集 */
+	// short temp;
+	// adc_temperature_init();                     /* 初始化ADC内部温度传感器采集 */
 
-    lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
-    lcd_show_string(30,  70, 200, 16, 16, "Temperature TEST", RED);
-    lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
-    lcd_show_string(30, 120, 200, 16, 16, "TEMPERATE: 00.00C", BLUE);
+    // lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    // lcd_show_string(30,  70, 200, 16, 16, "Temperature TEST", RED);
+    // lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    // lcd_show_string(30, 120, 200, 16, 16, "TEMPERATE: 00.00C", BLUE);
 
-    while (1)
-    {
+    // while (1)
+    // {
 
-        temp = adc_get_temperature();   /* 得到温度值 */
+    //     temp = adc_get_temperature();   /* 得到温度值 */
 
-        if (temp < 0)
-        {
-            temp = -temp;
-            lcd_show_string(30 + 10 * 8, 120, 16, 16, 16, "-", BLUE);   /* 显示负号 */
-        }
-        else
-        {
-            lcd_show_string(30 + 10 * 8, 120, 16, 16, 16, " ", BLUE);   /* 无符号 */
-        }
-        lcd_show_xnum(30 + 11 * 8, 120, temp / 100, 2, 16, 0, BLUE);    /* 显示整数部分 */
-        lcd_show_xnum(30 + 14 * 8, 120, temp % 100, 2, 16, 0X80, BLUE); /* 显示小数部分 */
+    //     if (temp < 0)
+    //     {
+    //         temp = -temp;
+    //         lcd_show_string(30 + 10 * 8, 120, 16, 16, 16, "-", BLUE);   /* 显示负号 */
+    //     }
+    //     else
+    //     {
+    //         lcd_show_string(30 + 10 * 8, 120, 16, 16, 16, " ", BLUE);   /* 无符号 */
+    //     }
+    //     lcd_show_xnum(30 + 11 * 8, 120, temp / 100, 2, 16, 0, BLUE);    /* 显示整数部分 */
+    //     lcd_show_xnum(30 + 14 * 8, 120, temp % 100, 2, 16, 0X80, BLUE); /* 显示小数部分 */
         
-		showtime();	//显示时间
-        LED0_TOGGLE();  /* LED0闪烁,提示程序运行 */
-        delay_ms(250);
-    }
+	// 	showtime();	//显示时间
+    //     LED0_TOGGLE();  /* LED0闪烁,提示程序运行 */
+    //     delay_ms(250);
+    // }
 
 	// 单通道ADC过采样（12转16分辨率）
 	/* ADC过采样技术, 是利用ADC多次采集的方式, 来提高ADC精度, 采样速度每提高4倍

@@ -27,6 +27,7 @@
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\PWR",
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\DMA",
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\ADC",
+                "d:\\MDKProjects\\test02\\Drivers\\BSP\\DAC",
                 "d:\\MDKProjects\\test02\\Middlewares\\USMART"
             ],
             "defines": [

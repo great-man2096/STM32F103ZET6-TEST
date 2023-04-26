@@ -67,3 +67,4 @@
 ..\..\output\usmart_config.o: ..\..\Drivers\./BSP/LCD/lcd.h
 ..\..\output\usmart_config.o: D:\MDK5.36\ARM\ARMCC\Bin\..\include\stdlib.h
 ..\..\output\usmart_config.o: ..\..\Drivers\./BSP/RTC/rtc.h
+..\..\output\usmart_config.o: ..\..\Drivers\./BSP/DAC/dac.h
