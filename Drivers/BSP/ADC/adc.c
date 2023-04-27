@@ -254,7 +254,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 {
 	if (hadc->Instance == ADC1)
 	{
-		GPIO_InitTypeDef gpio_init_struct;
+		GPIO_InitTypeDef gpio_init_struct = {0};
 		RCC_PeriphCLKInitTypeDef adc_clk_init = {0};
 		__HAL_RCC_GPIOA_CLK_ENABLE();
 		__HAL_RCC_GPIOC_CLK_ENABLE();

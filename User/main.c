@@ -26,7 +26,7 @@
 // #include "./BSP/EXTI/exti.h"
 #include "./BSP/WDG/wdg.h"
 // #include "./BSP/TIMER/btim.h"
-#include "./BSP/TIMER/gtime.h"
+// #include "./BSP/TIMER/gtime.h"
 #include "./BSP/TIMER/atim.h"
 #include "./BSP/LCD/lcd.h"
 #include "./USMART/usmart.h"
@@ -35,6 +35,8 @@
 #include "./BSP/DMA/dma.h"
 #include "./BSP/ADC/adc.h"
 #include "./BSP/DAC/dac.h"
+#include "./BSP/PWMDAC/pwmdac.h"
+#include "./BSP/24CXX/24cxx.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -74,31 +76,8 @@ void showtime(void)
 //  #define ADC_DMA_BUF_SIZE        ADC_OVERSAMPLE_TIMES * 10   /* ADC DMA采集 BUF大小, 应等于过采样次数的整数倍 */
 //  uint16_t g_adc_dma_buf[ADC_DMA_BUF_SIZE];                   /* ADC DMA BUF */
 //  extern uint8_t g_adc_dma_sta;                               /* DMA传输状态标志, 0,未完成; 1, 已完成 */
-extern uint16_t g_dac_sin_buf[4096];
-/**
- * @brief       产生正弦波函序列
- *   @note      需保证: maxval > samples/2
- *
- * @param       maxval : 最大值(0 < maxval < 2048)
- * @param       samples: 采样点的个数
- *
- * @retval      无
- */
-void dac_creat_sin_buf(uint16_t maxval, uint16_t samples)
-{
-	uint8_t i;
-	float inc = (2 * 3.1415962) / samples; /* 计算增量（一个周期DAC_SIN_BUF个点）*/
-	float outdata = 0;
+// extern uint16_t g_dac_sin_buf[4096];
 
-	for (i = 0; i < samples; i++)
-	{
-		outdata = maxval * (1 + sin(inc * i)); /* 计算以dots个点为周期的每个点的值，放大maxval倍，并偏移到正数区域 */
-		if (outdata > 4095)
-			outdata = 4095; /* 上限限定 */
-		// printf("%f\r\n",outdata);
-		g_dac_sin_buf[i] = outdata;
-	}
-}
 
 int main(void)
 {
@@ -113,68 +92,186 @@ int main(void)
 	lcd_init();							/* LCD初始化 */
 
 	/******************************************************
-	DAC实验,正弦波实验
+	IIC实验
 	*******************************************************/
-	adc_init();
+	at24cxx_init();
+    
+	/* 要写入到24c02的字符串数组 */
+	const uint8_t g_text_buf[] = {"STM32 IIC TEST"};
+	#define TEXT_SIZE       sizeof(g_text_buf)  /* TEXT字符串长度 */
+	uint16_t i = 0;
+    uint8_t datatemp[TEXT_SIZE];
+    lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+    lcd_show_string(30, 70, 200, 16, 16, "IIC TEST", RED);
+    lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED);    /* 显示提示信息 */
+	while (at24cx x_check()) /* 检测不到24c02 */
+    {
+        lcd_show_string(30, 130, 200, 16, 16, "24C02 Check Failed!", RED);
+        lcd_show_string(30, 146, 200, 16, 16, "Please Check!      ", RED);
+        delay_ms(500);
+        LED1_TOGGLE();      /* 红灯闪烁 */
+    }
 
-	lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
-    lcd_show_string(30,  70, 200, 16, 16, "DAC DMA Sine WAVE TEST", RED);
-    lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
-    lcd_show_string(30, 110, 200, 16, 16, "KEY0:3Khz  KEY1:30Khz", RED);
+    lcd_show_string(30, 130, 200, 16, 16, "24C02 Ready!", RED);
 
-    lcd_show_string(30, 130, 200, 16, 16, "DAC VAL:", BLUE);
-    lcd_show_string(30, 150, 200, 16, 16, "DAC VOL:0.000V", BLUE);
-    lcd_show_string(30, 170, 200, 16, 16, "ADC VOL:0.000V", BLUE);
-
-	uint16_t adcx;
-    float temp;
-	uint8_t t = 0;
-	dac_dma_wave_init();
-	dac_creat_sin_buf(2048, 100);
-	dac_dma_wave_enable(100, 10 - 1, 72 - 1);
 	while (1)
 	{
-		t++;
-		if (key1_scan())                               /* 高采样率 , 约1Khz波形 */
+		
+		if (key2_scan()) 
+		{
+			lcd_fill(0, 150, 239, 319, WHITE);  /* 清除半屏 */
+            lcd_show_string(30, 150, 200, 16, 16, "Start Write 24C02....", BLUE);
+            at24cxx_write(0, (uint8_t *)g_text_buf, TEXT_SIZE);
+            lcd_show_string(30, 150, 200, 16, 16, "24C02 Write Finished!", BLUE);   /* 提示传送完成 */
+		}
+		else if (key1_scan()) 
+		{
+			lcd_show_string(30, 150, 200, 16, 16, "Start Read 24C02.... ", BLUE);
+            at24cxx_read(0, datatemp, TEXT_SIZE);
+            lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:  ", BLUE);   /* 提示传送完成 */
+            lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);          /* 显示读到的字符串 */
+		}
+		i++;
+
+        if (i == 20)
         {
-            dac_creat_sin_buf(2048, 100);
-            dac_dma_wave_enable(100, 10 - 1, 24 - 1);       /* 300Khz触发频率, 100个点, 得到最高3KHz的正弦波. */
-        }
-        else if (key2_scan())                          /* 低采样率 , 约1Khz波形 */
-        {
-            dac_creat_sin_buf(2048, 10);
-            dac_dma_wave_enable(10, 10 - 1, 24 - 1);        /* 300Khz触发频率, 10个点, 可以得到最高30KHz的正弦波. */
-        }
-
-        adcx = DAC1->DHR12R1;                               /* 获取DAC1_OUT1的输出状态 */
-        lcd_show_xnum(94, 130, adcx, 4, 16, 0, BLUE);       /* 显示DAC寄存器值 */
-
-        temp = (float)adcx * (3.3 / 4096);                  /* 得到DAC电压值 */
-        adcx = temp;
-        lcd_show_xnum(94, 150, temp, 1, 16, 0, BLUE);       /* 显示电压值整数部分 */
-
-        temp -= adcx;
-        temp *= 1000;
-        lcd_show_xnum(110, 150, temp, 3, 16, 0X80, BLUE);   /* 显示电压值的小数部分 */
-
-        adcx = adc_get_result();       /* 得到ADC1通道2的转换结果 */
-        temp = (float)adcx * (3.3 / 4096);                  /* 得到ADC电压值(adc是12bit的) */
-        adcx = temp;
-        lcd_show_xnum(94, 170, temp, 1, 16, 0, BLUE);       /* 显示电压值整数部分 */
-
-        temp -= adcx;
-        temp *= 1000;
-        lcd_show_xnum(110, 170, temp, 3, 16, 0X80, BLUE);   /* 显示电压值的小数部分 */
-
-        if (t == 40)        /* 定时时间到了 */
-        {
-            LED0_TOGGLE();  /* LED0闪烁 */
-            t = 0;
+            LED0_TOGGLE();  /* 红灯闪烁 */
+            i = 0;
         }
 
-        delay_ms(5);
+        delay_ms(10);
 	}
-	
+
+	/******************************************************
+	DAC实验,PWMDAC实验
+	*******************************************************/
+	// extern TIM_HandleTypeDef g_tim1_handler;
+	// uint16_t adcx;
+	// float temp;
+	// uint8_t t = 0;
+	// uint16_t pwmval = 0;
+	// adc_init();
+	// pwmdac_init(256 - 1, 0); /* PWM DAC 初始化, Fpwm = 72M/256 =281.25Khz */
+	// lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+	// lcd_show_string(30, 70, 200, 16, 16, "PWM DAC TEST", RED);
+	// lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+	// lcd_show_string(30, 110, 200, 16, 16, "KEY_UP:+ KEY1:-", RED);
+	// lcd_show_string(30, 130, 200, 16, 16, "PWM VAL:", BLUE);
+	// lcd_show_string(30, 150, 200, 16, 16, "DAC VOL:0.000V", BLUE);
+	// lcd_show_string(30, 170, 200, 16, 16, "ADC VOL:0.000V", BLUE);
+	// while (1)
+	// {
+	// 	t++;
+	// 	if (key1_scan()) /* PWM 占空比调高 */
+	// 	{
+	// 		if (pwmval < 3200) /* 范围限定 */
+	// 		{
+	// 			pwmval += 100;
+	// 		}
+	// 		/* 输出新的 PWM 占空比 */
+	// 		pwmdac_set_voltage(pwmval);
+	// 	}
+	// 	else if (key2_scan()) /* PWM 占空比调低 */
+	// 	{
+	// 		if (pwmval > 100) /* 范围限定 */
+	// 		{
+	// 			pwmval -= 100;
+	// 		}
+	// 		else
+	// 		{
+	// 			pwmval = 0;
+	// 		}
+	// 		/* 输出新的 PWM 占空比 */
+	// 		pwmdac_set_voltage(pwmval);
+	// 	}
+	// 	if (t == 10 || key1_scan() || key2_scan())
+	// 	{	/* WKUP / KEY1 按下了, 或者定时时间到了 */
+	// 		/* PWM DAC 定时器输出比较值 */
+	// 		// adcx = __HAL_TIM_GET_COMPARE(&g_tim1_handler, PWMDAC_TIMX_CHY);
+	// 		adcx = PWMDAC_TIMX_CCRX;
+	// 		lcd_show_xnum(94, 130, adcx, 3, 16, 0, BLUE); /* 显示 CCRX 寄存器值 */
+	// 		temp = (float)adcx * (3.3 / 256);			  /* 得到 DAC 电压值 */
+	// 		adcx = temp;
+	// 		lcd_show_xnum(94, 150, temp, 1, 16, 0, BLUE); /* 显示电压值整数部分 */
+	// 		temp -= adcx;
+	// 		temp *= 1000;
+	// 		lcd_show_xnum(110, 150, temp, 3, 16, 0X80, BLUE); /* 电压值的小数部分 */
+	// 		adcx = adc_get_result();	  /* ADC3 通道 1 的转换结果 */
+	// 		temp = (float)adcx * (3.3 / 4096);				  /* 得到 ADC 电压值(adc 是 12bit 的) */
+	// 		adcx = temp;
+	// 		lcd_show_xnum(94, 170, temp, 1, 16, 0, BLUE); /* 显示电压值整数部分 */
+	// 		temp -= adcx;
+	// 		temp *= 1000;
+	// 		lcd_show_xnum(110, 170, temp, 3, 16, 0X80, BLUE); /* 电压值的小数部分 */
+	// 		LED0_TOGGLE();									  /* LED0 闪烁 */
+	// 		t = 0;
+	// 	}
+	// 	delay_ms(10);
+	// }
+
+	/******************************************************
+	DAC实验,正弦波实验
+	*******************************************************/
+	// adc_init();
+
+	// lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+	// lcd_show_string(30, 70, 200, 16, 16, "DAC DMA Sine WAVE TEST", RED);
+	// lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+	// lcd_show_string(30, 110, 200, 16, 16, "KEY0:3Khz  KEY1:30Khz", RED);
+
+	// lcd_show_string(30, 130, 200, 16, 16, "DAC VAL:", BLUE);
+	// lcd_show_string(30, 150, 200, 16, 16, "DAC VOL:0.000V", BLUE);
+	// lcd_show_string(30, 170, 200, 16, 16, "ADC VOL:0.000V", BLUE);
+
+	// uint16_t adcx;
+	// float temp;
+	// uint8_t t = 0;
+	// dac_dma_wave_init();
+	// dac_creat_sin_buf(2048, 100);
+	// dac_dma_wave_enable(100, 10 - 1, 72 - 1);
+	// while (1)
+	// {
+	// 	t++;
+	// 	if (key1_scan()) /* 高采样率 , 约1Khz波形 */
+	// 	{
+	// 		dac_creat_sin_buf(2048, 100);
+	// 		dac_dma_wave_enable(100, 10 - 1, 24 - 1); /* 300Khz触发频率, 100个点, 得到最高3KHz的正弦波. */
+	// 	}
+	// 	else if (key2_scan()) /* 低采样率 , 约1Khz波形 */
+	// 	{
+	// 		dac_creat_sin_buf(2048, 10);
+	// 		dac_dma_wave_enable(10, 10 - 1, 24 - 1); /* 300Khz触发频率, 10个点, 可以得到最高30KHz的正弦波. */
+	// 	}
+
+	// 	adcx = DAC1->DHR12R1;						  /* 获取DAC1_OUT1的输出状态 */
+	// 	lcd_show_xnum(94, 130, adcx, 4, 16, 0, BLUE); /* 显示DAC寄存器值 */
+
+	// 	temp = (float)adcx * (3.3 / 4096); /* 得到DAC电压值 */
+	// 	adcx = temp;
+	// 	lcd_show_xnum(94, 150, temp, 1, 16, 0, BLUE); /* 显示电压值整数部分 */
+
+	// 	temp -= adcx;
+	// 	temp *= 1000;
+	// 	lcd_show_xnum(110, 150, temp, 3, 16, 0X80, BLUE); /* 显示电压值的小数部分 */
+
+	// 	adcx = adc_get_result();		   /* 得到ADC1通道2的转换结果 */
+	// 	temp = (float)adcx * (3.3 / 4096); /* 得到ADC电压值(adc是12bit的) */
+	// 	adcx = temp;
+	// 	lcd_show_xnum(94, 170, temp, 1, 16, 0, BLUE); /* 显示电压值整数部分 */
+
+	// 	temp -= adcx;
+	// 	temp *= 1000;
+	// 	lcd_show_xnum(110, 170, temp, 3, 16, 0X80, BLUE); /* 显示电压值的小数部分 */
+
+	// 	if (t == 40) /* 定时时间到了 */
+	// 	{
+	// 		LED0_TOGGLE(); /* LED0闪烁 */
+	// 		t = 0;
+	// 	}
+
+	// 	delay_ms(5);
+	// }
 
 	/******************************************************
 	DAC实验,三角波实验

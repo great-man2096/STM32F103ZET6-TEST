@@ -66,7 +66,6 @@
 ..\..\output\main.o: ..\..\Drivers\./BSP/LED/led.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/KEY/key.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/WDG/wdg.h
-..\..\output\main.o: ..\..\Drivers\./BSP/TIMER/gtime.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/TIMER/atim.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/LCD/lcd.h
 ..\..\output\main.o: D:\MDK5.36\ARM\ARMCC\Bin\..\include\stdlib.h
@@ -77,3 +76,5 @@
 ..\..\output\main.o: ..\..\Drivers\./BSP/DMA/dma.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/ADC/adc.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/DAC/dac.h
+..\..\output\main.o: ..\..\Drivers\./BSP/PWMDAC/pwmdac.h
+..\..\output\main.o: ..\..\Drivers\./BSP/24CXX/24cxx.h

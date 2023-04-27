@@ -611,6 +611,21 @@
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\BSP\DAC\dac.c</FilePath>
             </File>
+            <File>
+              <FileName>pwmdac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\PWMDAC\pwmdac.c</FilePath>
+            </File>
+            <File>
+              <FileName>24cxx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\24CXX\24cxx.c</FilePath>
+            </File>
+            <File>
+              <FileName>myiic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\IIC\myiic.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

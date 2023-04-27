@@ -59,3 +59,5 @@
 ..\..\output\dac.o: ..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd_ex.h
 ..\..\output\dac.o: ..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h
 ..\..\output\dac.o: ..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h
+..\..\output\dac.o: ..\..\Drivers\./SYSTEM/delay/delay.h
+..\..\output\dac.o: D:\MDK5.36\ARM\ARMCC\Bin\..\include\math.h

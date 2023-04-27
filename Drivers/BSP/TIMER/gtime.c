@@ -233,22 +233,22 @@ void gtim_timx_pwm_chy_init(uint16_t arr, uint16_t psc)
  * @param       htim:定时器句柄
  * @retval      无
  */
-void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
-{
-    if (htim->Instance == GTIM_TIMX_PWM)
-    {
-        GPIO_InitTypeDef gpio_init_struct;
-        GTIM_TIMX_PWM_CHY_GPIO_CLK_ENABLE();               /* 开启通道y的CPIO时钟 */
-        GTIM_TIMX_PWM_CHY_CLK_ENABLE();
+// void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
+// {
+//     if (htim->Instance == GTIM_TIMX_PWM)
+//     {
+//         GPIO_InitTypeDef gpio_init_struct;
+//         GTIM_TIMX_PWM_CHY_GPIO_CLK_ENABLE();               /* 开启通道y的CPIO时钟 */
+//         GTIM_TIMX_PWM_CHY_CLK_ENABLE();
 
-        gpio_init_struct.Pin = GTIM_TIMX_PWM_CHY_GPIO_PIN; /* 通道y的CPIO口 */
-        gpio_init_struct.Mode = GPIO_MODE_AF_PP;           /* 复用推完输出 */
-        gpio_init_struct.Pull = GPIO_PULLUP;               /* 上拉 */
-        gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;     /* 高速 */
-        HAL_GPIO_Init(GTIM_TIMX_PWM_CHY_GPIO_PORT, &gpio_init_struct);
-        GTIM_TIMX_PWM_CHY_GPIO_REMAP();                    /* IO口REMAP设置, 是否必要查看头文件配置的说明! */
-    }
-}
+//         gpio_init_struct.Pin = GTIM_TIMX_PWM_CHY_GPIO_PIN; /* 通道y的CPIO口 */
+//         gpio_init_struct.Mode = GPIO_MODE_AF_PP;           /* 复用推完输出 */
+//         gpio_init_struct.Pull = GPIO_PULLUP;               /* 上拉 */
+//         gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;     /* 高速 */
+//         HAL_GPIO_Init(GTIM_TIMX_PWM_CHY_GPIO_PORT, &gpio_init_struct);
+//         GTIM_TIMX_PWM_CHY_GPIO_REMAP();                    /* IO口REMAP设置, 是否必要查看头文件配置的说明! */
+//     }
+// }
 
 
 

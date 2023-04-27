@@ -1,4 +1,6 @@
 #include "./BSP/DAC/dac.h"
+#include "./SYSTEM/delay/delay.h"
+#include "math.h"
 
 DAC_HandleTypeDef g_dac_handle; /* DAC句柄 */
 DMA_HandleTypeDef g_dma_adc_handle;
@@ -16,8 +18,8 @@ uint16_t g_dac_sin_buf[4096];
  */
 void dac_init(uint8_t outx)
 {
-    GPIO_InitTypeDef gpio_init_struct;
-    DAC_ChannelConfTypeDef dac_ch_conf;
+    GPIO_InitTypeDef gpio_init_struct = {0};
+    DAC_ChannelConfTypeDef dac_ch_conf = {0};
 
     __HAL_RCC_DAC_CLK_ENABLE();   /* 使能DAC1的时钟 */
     __HAL_RCC_GPIOA_CLK_ENABLE(); /* 使能DAC OUT1/2的IO口时钟(都在PA口,PA4/PA5) */
@@ -52,7 +54,7 @@ void dac_MspInit(DAC_HandleTypeDef *hdac)
 {
     if (hdac->Instance == DAC)
     {
-        GPIO_InitTypeDef gpio_init_struct;
+        GPIO_InitTypeDef gpio_init_struct = {0};
 
         __HAL_RCC_GPIOA_CLK_ENABLE();
         __HAL_RCC_DAC_CLK_ENABLE();
@@ -128,7 +130,7 @@ void dac_triangular_wave(uint16_t maxval, uint16_t dt, uint16_t samples, uint16_
 
 void dac_dma_wave_init(void)
 {
-    DAC_ChannelConfTypeDef dac_ch_conf;
+    DAC_ChannelConfTypeDef dac_ch_conf = {0};
 
     __HAL_RCC_DMA2_CLK_DISABLE();
 
@@ -178,3 +180,30 @@ void dac_dma_wave_enable(uint16_t cndtr, uint16_t arr, uint16_t psc)
     HAL_DAC_Stop_DMA(&g_dac_handle, DAC_CHANNEL_1);
     HAL_DAC_Start_DMA(&g_dac_handle, DAC_CHANNEL_1, (uint32_t *)g_dac_sin_buf, cndtr, DAC_ALIGN_12B_R);
 }
+
+
+/**
+ * @brief       产生正弦波函序列
+ *   @note      需保证: maxval > samples/2
+ *
+ * @param       maxval : 最大值(0 < maxval < 2048)
+ * @param       samples: 采样点的个数
+ *
+ * @retval      无
+ */
+void dac_creat_sin_buf(uint16_t maxval, uint16_t samples)
+{
+	uint8_t i;
+	float inc = (2 * 3.1415962) / samples; /* 计算增量（一个周期DAC_SIN_BUF个点）*/
+	float outdata = 0;
+
+	for (i = 0; i < samples; i++)
+	{
+		outdata = maxval * (1 + sin(inc * i)); /* 计算以dots个点为周期的每个点的值，放大maxval倍，并偏移到正数区域 */
+		if (outdata > 4095)
+			outdata = 4095; /* 上限限定 */
+		// printf("%f\r\n",outdata);
+		g_dac_sin_buf[i] = outdata;
+	}
+}
+
