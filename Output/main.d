@@ -78,3 +78,4 @@
 ..\..\output\main.o: ..\..\Drivers\./BSP/DAC/dac.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/PWMDAC/pwmdac.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/24CXX/24cxx.h
+..\..\output\main.o: ..\..\Drivers\./BSP/NORFLASH/norflash.h

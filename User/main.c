@@ -37,6 +37,7 @@
 #include "./BSP/DAC/dac.h"
 #include "./BSP/PWMDAC/pwmdac.h"
 #include "./BSP/24CXX/24cxx.h"
+#include "./BSP/NORFLASH/norflash.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -77,7 +78,10 @@ void showtime(void)
 //  uint16_t g_adc_dma_buf[ADC_DMA_BUF_SIZE];                   /* ADC DMA BUF */
 //  extern uint8_t g_adc_dma_sta;                               /* DMA传输状态标志, 0,未完成; 1, 已完成 */
 // extern uint16_t g_dac_sin_buf[4096];
+/* 要写入到FLASH的字符串数组 */
+const uint8_t g_text_buf[] = {"STM32 SPI TEST"};	//const,表示它是一个不可变的常量
 
+#define TEXT_SIZE sizeof(g_text_buf) /* TEXT字符串长度 */
 
 int main(void)
 {
@@ -94,54 +98,114 @@ int main(void)
 	/******************************************************
 	IIC实验
 	*******************************************************/
-	at24cxx_init();
-    
-	/* 要写入到24c02的字符串数组 */
-	const uint8_t g_text_buf[] = {"STM32 IIC TEST"};
-	#define TEXT_SIZE       sizeof(g_text_buf)  /* TEXT字符串长度 */
 	uint16_t i = 0;
-    uint8_t datatemp[TEXT_SIZE];
-    lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
-    lcd_show_string(30, 70, 200, 16, 16, "IIC TEST", RED);
-    lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
-    lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED);    /* 显示提示信息 */
-	while (at24cx x_check()) /* 检测不到24c02 */
-    {
-        lcd_show_string(30, 130, 200, 16, 16, "24C02 Check Failed!", RED);
-        lcd_show_string(30, 146, 200, 16, 16, "Please Check!      ", RED);
-        delay_ms(500);
-        LED1_TOGGLE();      /* 红灯闪烁 */
-    }
+	uint8_t datatemp[TEXT_SIZE];
+	uint32_t flashsize;
+	uint16_t id = 0;
+	char idinfo[30];
+	norflash_init(); /* 初始化NORFLASH */
 
-    lcd_show_string(30, 130, 200, 16, 16, "24C02 Ready!", RED);
+	lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+	lcd_show_string(30, 70, 200, 16, 16, "SPI TEST", RED);
+	lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+	lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED); /* 显示提示信息 */
+
+	id = norflash_read_id(); /* 读取FLASH ID */
+
+	while ((id == 0) || (id == 0XFFFF)) /* 检测不到FLASH芯片 */
+	{
+		lcd_show_string(30, 130, 200, 16, 16, "FLASH Check Failed!", RED);
+		delay_ms(500);
+		lcd_show_string(30, 130, 200, 16, 16, "Please Check!      ", RED);
+		delay_ms(500);
+		LED0_TOGGLE(); /* LED0闪烁 */
+	}
+
+	sprintf(idinfo,"SPI ID:%x FLASH Ready!", id);
+	lcd_show_string(30, 130, 200, 16, 16, idinfo, BLUE);
+	flashsize = 8 * 1024 * 1024; /* FLASH 大小为8M字节 */
 
 	while (1)
 	{
-		
-		if (key2_scan()) 
+		if (key2_scan()) /* KEY1按下,写入 */
 		{
-			lcd_fill(0, 150, 239, 319, WHITE);  /* 清除半屏 */
-            lcd_show_string(30, 150, 200, 16, 16, "Start Write 24C02....", BLUE);
-            at24cxx_write(0, (uint8_t *)g_text_buf, TEXT_SIZE);
-            lcd_show_string(30, 150, 200, 16, 16, "24C02 Write Finished!", BLUE);   /* 提示传送完成 */
+			lcd_fill(0, 150, 239, 319, WHITE); /* 清除半屏 */
+			lcd_show_string(30, 150, 200, 16, 16, "Start Write FLASH....", BLUE);
+			sprintf((char *)datatemp, "%s%d", (char *)g_text_buf, i);
+			norflash_write((uint8_t *)datatemp, flashsize - 100, TEXT_SIZE);	  /* 从倒数第100个地址处开始,写入SIZE长度的数据 */
+			lcd_show_string(30, 150, 200, 16, 16, "FLASH Write Finished!", BLUE); /* 提示传送完成 */
 		}
-		else if (key1_scan()) 
+
+		if (key1_scan()) /* KEY0按下,读取字符串并显示 */
 		{
-			lcd_show_string(30, 150, 200, 16, 16, "Start Read 24C02.... ", BLUE);
-            at24cxx_read(0, datatemp, TEXT_SIZE);
-            lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:  ", BLUE);   /* 提示传送完成 */
-            lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);          /* 显示读到的字符串 */
+			lcd_show_string(30, 150, 200, 16, 16, "Start Read FLASH... . ", BLUE);
+			norflash_read(datatemp, flashsize - 100, TEXT_SIZE);				   /* 从倒数第100个地址处开始,读出SIZE个字节 */
+			lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:   ", BLUE); /* 提示传送完成 */
+			lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);		   /* 显示读到的字符串 */
 		}
+
 		i++;
 
-        if (i == 20)
-        {
-            LED0_TOGGLE();  /* 红灯闪烁 */
-            i = 0;
-        }
+		if (i == 20)
+		{
+			LED0_TOGGLE(); /* LED0闪烁 */
+			i = 0;
+		}
 
-        delay_ms(10);
+		delay_ms(10);
 	}
+
+	/******************************************************
+	IIC实验
+	*******************************************************/
+	// at24cxx_init();
+
+	// /* 要写入到24c02的字符串数组 */
+	// const uint8_t g_text_buf[] = {"STM32 IIC TEST"};
+	// #define TEXT_SIZE       sizeof(g_text_buf)  /* TEXT字符串长度 */
+	// uint16_t i = 0;
+	// uint8_t datatemp[TEXT_SIZE];
+	// lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+	// lcd_show_string(30, 70, 200, 16, 16, "IIC TEST", RED);
+	// lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+	// lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED);    /* 显示提示信息 */
+	// while (at24cx x_check()) /* 检测不到24c02 */
+	// {
+	//     lcd_show_string(30, 130, 200, 16, 16, "24C02 Check Failed!", RED);
+	//     lcd_show_string(30, 146, 200, 16, 16, "Please Check!      ", RED);
+	//     delay_ms(500);
+	//     LED1_TOGGLE();      /* 红灯闪烁 */
+	// }
+
+	// lcd_show_string(30, 130, 200, 16, 16, "24C02 Ready!", RED);
+
+	// while (1)
+	// {
+
+	// 	if (key2_scan())
+	// 	{
+	// 		lcd_fill(0, 150, 239, 319, WHITE);  /* 清除半屏 */
+	//         lcd_show_string(30, 150, 200, 16, 16, "Start Write 24C02....", BLUE);
+	//         at24cxx_write(0, (uint8_t *)g_text_buf, TEXT_SIZE);
+	//         lcd_show_string(30, 150, 200, 16, 16, "24C02 Write Finished!", BLUE);   /* 提示传送完成 */
+	// 	}
+	// 	else if (key1_scan())
+	// 	{
+	// 		lcd_show_string(30, 150, 200, 16, 16, "Start Read 24C02.... ", BLUE);
+	//         at24cxx_read(0, datatemp, TEXT_SIZE);
+	//         lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:  ", BLUE);   /* 提示传送完成 */
+	//         lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);          /* 显示读到的字符串 */
+	// 	}
+	// 	i++;
+
+	//     if (i == 20)
+	//     {
+	//         LED0_TOGGLE();  /* 红灯闪烁 */
+	//         i = 0;
+	//     }
+
+	//     delay_ms(10);
+	// }
 
 	/******************************************************
 	DAC实验,PWMDAC实验
