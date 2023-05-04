@@ -33,6 +33,7 @@
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\IIC",
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\SPI",
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\NORFLASH",
+                "d:\\MDKProjects\\test02\\Drivers\\BSP\\CAN",
                 "d:\\MDKProjects\\test02\\Middlewares\\USMART"
             ],
             "defines": [

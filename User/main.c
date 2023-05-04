@@ -38,6 +38,7 @@
 #include "./BSP/PWMDAC/pwmdac.h"
 #include "./BSP/24CXX/24cxx.h"
 #include "./BSP/NORFLASH/norflash.h"
+#include "./BSP/CAN/can.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -94,66 +95,105 @@ int main(void)
 	key_init();							/* 初始化按键 */
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
-
 	/******************************************************
-	IIC实验
+	CAN实验
 	*******************************************************/
-	uint16_t i = 0;
-	uint8_t datatemp[TEXT_SIZE];
-	uint32_t flashsize;
-	uint16_t id = 0;
-	char idinfo[30];
-	norflash_init(); /* 初始化NORFLASH */
+	can_init();
+    uint8_t i = 0, t = 0;
+    uint8_t cnt = 0;
+    uint8_t canbuf[8];
+    uint8_t rec_len = 0;
+    uint8_t rec_buf[8];
 
-	lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
-	lcd_show_string(30, 70, 200, 16, 16, "SPI TEST", RED);
-	lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
-	lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED); /* 显示提示信息 */
-
-	id = norflash_read_id(); /* 读取FLASH ID */
-
-	while ((id == 0) || (id == 0XFFFF)) /* 检测不到FLASH芯片 */
-	{
-		lcd_show_string(30, 130, 200, 16, 16, "FLASH Check Failed!", RED);
-		delay_ms(500);
-		lcd_show_string(30, 130, 200, 16, 16, "Please Check!      ", RED);
-		delay_ms(500);
-		LED0_TOGGLE(); /* LED0闪烁 */
-	}
-
-	sprintf(idinfo,"SPI ID:%x FLASH Ready!", id);
-	lcd_show_string(30, 130, 200, 16, 16, idinfo, BLUE);
-	flashsize = 8 * 1024 * 1024; /* FLASH 大小为8M字节 */
-
-	while (1)
-	{
+	while(1) {
 		if (key2_scan()) /* KEY1按下,写入 */
 		{
-			lcd_fill(0, 150, 239, 319, WHITE); /* 清除半屏 */
-			lcd_show_string(30, 150, 200, 16, 16, "Start Write FLASH....", BLUE);
-			sprintf((char *)datatemp, "%s%d", (char *)g_text_buf, i);
-			norflash_write((uint8_t *)datatemp, flashsize - 100, TEXT_SIZE);	  /* 从倒数第100个地址处开始,写入SIZE长度的数据 */
-			lcd_show_string(30, 150, 200, 16, 16, "FLASH Write Finished!", BLUE); /* 提示传送完成 */
+			for(i=0; i< 8;i++)
+			{
+				canbuf[i] = i+cnt;
+			}
+			can_send_msg(0x12345678,canbuf, 4);
 		}
-
-		if (key1_scan()) /* KEY0按下,读取字符串并显示 */
+		rec_len = can_receive_msg(rec_buf);
+		if (rec_len)
 		{
-			lcd_show_string(30, 150, 200, 16, 16, "Start Read FLASH... . ", BLUE);
-			norflash_read(datatemp, flashsize - 100, TEXT_SIZE);				   /* 从倒数第100个地址处开始,读出SIZE个字节 */
-			lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:   ", BLUE); /* 提示传送完成 */
-			lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);		   /* 显示读到的字符串 */
+			for (uint8_t x = 0; x < rec_len; x++)
+			{
+				printf("%X ", rec_buf[x]);
+			}
+			printf("\r\n");
 		}
 
-		i++;
+		t++;
+        delay_ms(10);
 
-		if (i == 20)
-		{
-			LED0_TOGGLE(); /* LED0闪烁 */
-			i = 0;
-		}
-
-		delay_ms(10);
+        if (t == 20)
+        {
+            LED0_TOGGLE(); /* 提示系统正在运行 */
+            t = 0;
+            cnt++;
+        }
 	}
+
+	/******************************************************
+	SPI实验
+	*******************************************************/
+	// uint16_t i = 0;
+	// uint8_t datatemp[TEXT_SIZE];
+	// uint32_t flashsize;
+	// uint16_t id = 0;
+	// char idinfo[30];
+	// norflash_init(); /* 初始化NORFLASH */
+
+	// lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+	// lcd_show_string(30, 70, 200, 16, 16, "SPI TEST", RED);
+	// lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+	// lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED); /* 显示提示信息 */
+
+	// id = norflash_read_id(); /* 读取FLASH ID */
+
+	// while ((id == 0) || (id == 0XFFFF)) /* 检测不到FLASH芯片 */
+	// {
+	// 	lcd_show_string(30, 130, 200, 16, 16, "FLASH Check Failed!", RED);
+	// 	delay_ms(500);
+	// 	lcd_show_string(30, 130, 200, 16, 16, "Please Check!      ", RED);
+	// 	delay_ms(500);
+	// 	LED0_TOGGLE(); /* LED0闪烁 */
+	// }
+
+	// sprintf(idinfo,"SPI ID:%x FLASH Ready!", id);
+	// lcd_show_string(30, 130, 200, 16, 16, idinfo, BLUE);
+	// flashsize = 8 * 1024 * 1024; /* FLASH 大小为8M字节 */
+
+	// while (1)
+	// {
+	// 	if (key2_scan()) /* KEY1按下,写入 */
+	// 	{
+	// 		lcd_fill(0, 150, 239, 319, WHITE); /* 清除半屏 */
+	// 		lcd_show_string(30, 150, 200, 16, 16, "Start Write FLASH....", BLUE);
+	// 		sprintf((char *)datatemp, "%s%d", (char *)g_text_buf, i);
+	// 		norflash_write((uint8_t *)datatemp, flashsize - 100, TEXT_SIZE);	  /* 从倒数第100个地址处开始,写入SIZE长度的数据 */
+	// 		lcd_show_string(30, 150, 200, 16, 16, "FLASH Write Finished!", BLUE); /* 提示传送完成 */
+	// 	}
+
+	// 	if (key1_scan()) /* KEY0按下,读取字符串并显示 */
+	// 	{
+	// 		lcd_show_string(30, 150, 200, 16, 16, "Start Read FLASH... . ", BLUE);
+	// 		norflash_read(datatemp, flashsize - 100, TEXT_SIZE);				   /* 从倒数第100个地址处开始,读出SIZE个字节 */
+	// 		lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:   ", BLUE); /* 提示传送完成 */
+	// 		lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);		   /* 显示读到的字符串 */
+	// 	}
+
+	// 	i++;
+
+	// 	if (i == 20)
+	// 	{
+	// 		LED0_TOGGLE(); /* LED0闪烁 */
+	// 		i = 0;
+	// 	}
+
+	// 	delay_ms(10);
+	// }
 
 	/******************************************************
 	IIC实验

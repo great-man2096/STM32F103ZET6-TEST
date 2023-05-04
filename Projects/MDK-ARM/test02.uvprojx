@@ -548,6 +548,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_spi.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f1xx_hal_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_can.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -640,6 +645,11 @@
               <FileName>norflash.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\BSP\NORFLASH\norflash.c</FilePath>
+            </File>
+            <File>
+              <FileName>can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\CAN\can.c</FilePath>
             </File>
           </Files>
         </Group>
