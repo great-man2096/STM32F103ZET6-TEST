@@ -80,3 +80,6 @@
 ..\..\output\main.o: ..\..\Drivers\./BSP/24CXX/24cxx.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/NORFLASH/norflash.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/CAN/can.h
+..\..\output\main.o: ..\..\Drivers\./BSP/TOUCH/touch.h
+..\..\output\main.o: ..\..\Drivers\./BSP/TOUCH/gt9xxx.h
+..\..\output\main.o: ..\..\Drivers\./BSP/TOUCH/ft5206.h

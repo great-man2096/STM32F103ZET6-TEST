@@ -39,6 +39,7 @@
 #include "./BSP/24CXX/24cxx.h"
 #include "./BSP/NORFLASH/norflash.h"
 #include "./BSP/CAN/can.h"
+#include "./BSP/TOUCH/touch.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -80,9 +81,9 @@ void showtime(void)
 //  extern uint8_t g_adc_dma_sta;                               /* DMA传输状态标志, 0,未完成; 1, 已完成 */
 // extern uint16_t g_dac_sin_buf[4096];
 /* 要写入到FLASH的字符串数组 */
-const uint8_t g_text_buf[] = {"STM32 SPI TEST"};	//const,表示它是一个不可变的常量
+// const uint8_t g_text_buf[] = {"STM32 SPI TEST"};	//const,表示它是一个不可变的常量
 
-#define TEXT_SIZE sizeof(g_text_buf) /* TEXT字符串长度 */
+// #define TEXT_SIZE sizeof(g_text_buf) /* TEXT字符串长度 */
 
 int main(void)
 {
@@ -96,44 +97,71 @@ int main(void)
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
 	/******************************************************
+	电阻触摸屏实验
+	*******************************************************/
+	tp_dev.init();                          /* 触摸屏初始化 */
+	lcd_show_string(30, 30, 200, 32, 32, "STM32", RED);
+	lcd_show_string(30, 70, 200, 16, 16, "ADC TEST", RED);
+	lcd_show_string(30, 90, 200, 16, 16, "YSC@burningCloud", RED);
+
+    if (tp_dev.touchtype != 0XFF)
+    {
+        lcd_show_string(30, 110, 200, 16, 16, "Press KEY0 to Adjust", RED); /* 电阻屏才显示 */
+    }
+
+    delay_ms(1500);
+    load_draw_dialog();
+
+    if (tp_dev.touchtype & 0X80)
+    {
+        ctp_test(); /* 电容屏测试 */
+    }
+    else
+    {
+        rtp_test(); /* 电阻屏测试 */
+    }
+
+	
+
+	/******************************************************
 	CAN实验
 	*******************************************************/
-	can_init();
-    uint8_t i = 0, t = 0;
-    uint8_t cnt = 0;
-    uint8_t canbuf[8];
-    uint8_t rec_len = 0;
-    uint8_t rec_buf[8];
+	// can_init();
+    // uint8_t i = 0, t = 0;
+    // uint8_t cnt = 0;
+    // uint8_t canbuf[8];
+    // uint8_t rec_len = 0;
+    // uint8_t rec_buf[8];
 
-	while(1) {
-		if (key2_scan()) /* KEY1按下,写入 */
-		{
-			for(i=0; i< 8;i++)
-			{
-				canbuf[i] = i+cnt;
-			}
-			can_send_msg(0x12345678,canbuf, 4);
-		}
-		rec_len = can_receive_msg(rec_buf);
-		if (rec_len)
-		{
-			for (uint8_t x = 0; x < rec_len; x++)
-			{
-				printf("%X ", rec_buf[x]);
-			}
-			printf("\r\n");
-		}
+	// while(1) {
+	// 	if (key2_scan()) /* KEY1按下,写入 */
+	// 	{
+	// 		for(i=0; i< 8;i++)
+	// 		{
+	// 			canbuf[i] = i+cnt;
+	// 		}
+	// 		can_send_msg(0x12345678,canbuf, 4);
+	// 	}
+	// 	rec_len = can_receive_msg(rec_buf);
+	// 	if (rec_len)
+	// 	{
+	// 		for (uint8_t x = 0; x < rec_len; x++)
+	// 		{
+	// 			printf("%X ", rec_buf[x]);
+	// 		}
+	// 		printf("\r\n");
+	// 	}
 
-		t++;
-        delay_ms(10);
+	// 	t++;
+    //     delay_ms(10);
 
-        if (t == 20)
-        {
-            LED0_TOGGLE(); /* 提示系统正在运行 */
-            t = 0;
-            cnt++;
-        }
-	}
+    //     if (t == 20)
+    //     {
+    //         LED0_TOGGLE(); /* 提示系统正在运行 */
+    //         t = 0;
+    //         cnt++;
+    //     }
+	// }
 
 	/******************************************************
 	SPI实验
