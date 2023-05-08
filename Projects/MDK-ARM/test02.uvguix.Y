@@ -6,7 +6,7 @@
   <Header>### uVision Project, (C) Keil Software</Header>
 
   <PrjGuiSettings>
-    <LastAddFilePath>D:\MDKProjects\test02\Drivers\BSP\TOUCH</LastAddFilePath>
+    <LastAddFilePath>D:\MDKProjects\test02\Drivers\STM32F1xx_HAL_Driver\Src</LastAddFilePath>
   </PrjGuiSettings>
 
   <ViewPool/>

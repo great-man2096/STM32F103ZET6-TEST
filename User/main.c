@@ -40,6 +40,8 @@
 #include "./BSP/NORFLASH/norflash.h"
 #include "./BSP/CAN/can.h"
 #include "./BSP/TOUCH/touch.h"
+#include "./BSP/NRF24L01/nrf24l01.h"
+#include "./BSP/STMFLASH/stmflash.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -84,6 +86,14 @@ void showtime(void)
 // const uint8_t g_text_buf[] = {"STM32 SPI TEST"};	//const,表示它是一个不可变的常量
 
 // #define TEXT_SIZE sizeof(g_text_buf) /* TEXT字符串长度 */
+/* 要写入到STM32 FLASH的字符串数组 */
+const uint8_t g_text_buf[] = {"STM32 FLASH TEST"};
+#define TEXT_LENTH sizeof(g_text_buf) /* 数组长度 */
+/*SIZE表示半字长(2字节), 大小必须是2的整数倍, 如果不是的话, 强制对齐到2的整数倍 */
+#define SIZE TEXT_LENTH / 2 + ((TEXT_LENTH % 2) ? 1 : 0)
+#define FLASH_SAVE_ADDR 0X08010000 /* 设置FLASH 保存地址(必须为偶数，且其值要大于本代码所占用FLASH的大小（Code+RO-data+RW-data） + 0X08000000) */
+
+
 
 int main(void)
 {
@@ -97,29 +107,191 @@ int main(void)
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
 	/******************************************************
+	stmflash实验
+	*******************************************************/
+    uint16_t i = 0;
+	uint8_t datatemp[SIZE];
+
+	lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    lcd_show_string(30,  70, 200, 16, 16, "FLASH EEPROM TEST", RED);
+    lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED);
+
+    while (1)
+    {
+
+        if (key2_scan()) /* KEY1按下,写入STM32 FLASH */
+        {
+            lcd_fill(0, 150, 239, 319, WHITE); /* 清除半屏 */
+            lcd_show_string(30, 150, 200, 16, 16, "Start Write FLASH....", RED);
+            stmflash_write(FLASH_SAVE_ADDR, (uint16_t *)g_text_buf, SIZE);
+            lcd_show_string(30, 150, 200, 16, 16, "FLASH Write Finished!", RED); /* 提示传送完成 */
+        }
+
+        if (key1_scan()) /* KEY0按下,读取字符串并显示 */
+        {
+            lcd_show_string(30, 150, 200, 16, 16, "Start Read FLASH.... ", RED);
+            stmflash_read(FLASH_SAVE_ADDR, (uint16_t *)datatemp, SIZE);
+            lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:  ", RED); /* 提示传送完成 */
+            lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);       /* 显示读到的字符串 */
+        }
+
+        i++;
+        delay_ms(10);
+
+        if (i == 20)
+        {
+            LED0_TOGGLE(); /* 提示系统正在运行 */
+            i = 0;
+        }
+    }
+
+	/******************************************************
+	2.4G无线通讯实验
+	*******************************************************/
+	// uint8_t key, mode;
+    // uint16_t t = 0;
+    // uint8_t tmp_buf[33];
+	// nrf24l01_init();                    /* 初始化NRF24L01 */
+
+    // lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+    // lcd_show_string(30, 70, 200, 16, 16, "NRF24L01 TEST", RED);
+    // lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+
+    // while (nrf24l01_check()) /* 检查NRF24L01是否在线 */
+    // {
+    //     lcd_show_string(30, 110, 200, 16, 16, "NRF24L01 Error", RED);
+    //     delay_ms(200);
+    //     lcd_fill(30, 110, 239, 130 + 16, WHITE);
+    //     delay_ms(200);
+    // }
+
+    // lcd_show_string(30, 110, 200, 16, 16, "NRF24L01 OK", RED);
+
+    // while (1) /* 提醒用户选择模式 */
+    // {
+
+    //     if (key2_scan())
+    //     {
+    //         mode = 0; /* 接收模式 */
+    //         break;
+    //     }
+    //     else if (key1_scan())
+    //     {
+    //         mode = 1; /* 发送模式 */
+    //         break;
+    //     }
+
+    //     t++;
+
+    //     if (t == 100) /* 显示提示信息 */
+    //     {
+    //         lcd_show_string(10, 130, 230, 16, 16, "key_E0:RX_Mode  key_C13:TX_Mode", RED);
+    //     }
+
+    //     if (t == 200) /* 关闭提示信息 */
+    //     {
+    //         lcd_fill(10, 130, 230, 150 + 16, WHITE);
+    //         t = 0;
+    //     }
+
+    //     delay_ms(5);
+    // }
+
+    // lcd_fill(10, 130, 240, 166, WHITE); /* 清空上面的显示 */
+
+    // if (mode == 0) /* RX模式 */
+    // {
+    //     lcd_show_string(30, 130, 200, 16, 16, "NRF24L01 RX_Mode", BLUE);
+    //     lcd_show_string(30, 150, 200, 16, 16, "Received DATA:", BLUE);
+    //     nrf24l01_rx_mode(); /* 进入RX模式 */
+
+    //     while (1)
+    //     {
+    //         if (nrf24l01_rx_packet(tmp_buf) == 0) /* 一旦接收到信息,则显示出来. */
+    //         {
+    //             tmp_buf[32] = 0; /* 加入字符串结束符 */
+    //             lcd_show_string(0, 170, lcddev.width - 1, 32, 16, (char *)tmp_buf, BLUE);
+    //         }
+    //         else
+    //             delay_us(100);
+
+    //         t++;
+
+    //         if (t == 10000) /* 大约1s钟改变一次状态 */
+    //         {
+    //             t = 0;
+    //             LED0_TOGGLE();
+    //         }
+    //     }
+    // }
+    // else /* TX模式 */
+    // {
+    //     lcd_show_string(30, 130, 200, 16, 16, "NRF24L01 TX_Mode", BLUE);
+    //     nrf24l01_tx_mode(); /* 进入TX模式 */
+    //     mode = ' ';         /* 从空格键开始发送 */
+
+    //     while (1)
+    //     {
+    //         if (nrf24l01_tx_packet(tmp_buf) == 0) /* 发送成功 */
+    //         {
+    //             lcd_show_string(30, 150, 239, 32, 16, "Sended DATA:", BLUE);
+    //             lcd_show_string(0, 170, lcddev.width - 1, 32, 16, (char *)tmp_buf, BLUE);
+    //             key = mode;
+
+    //             for (t = 0; t < 32; t++)
+    //             {
+    //                 key++;
+
+    //                 if (key > ('~'))
+    //                     key = ' ';
+
+    //                 tmp_buf[t] = key;
+    //             }
+
+    //             mode++;
+
+    //             if (mode > '~')
+    //                 mode = ' ';
+
+    //             tmp_buf[32] = 0; /* 加入结束符 */
+    //         }
+    //         else
+    //         {
+    //             lcd_fill(0, 150, lcddev.width, 170 + 16 * 3, WHITE); /* 清空显示 */
+    //             lcd_show_string(30, 150, lcddev.width - 1, 32, 16, "Send Failed ", BLUE);
+    //         }
+
+    //         LED0_TOGGLE();
+    //         delay_ms(200);
+    //     }
+    // }
+
+
+	/******************************************************
 	电阻触摸屏实验
 	*******************************************************/
-	tp_dev.init();                          /* 触摸屏初始化 */
-	lcd_show_string(30, 30, 200, 32, 32, "STM32", RED);
-	lcd_show_string(30, 70, 200, 16, 16, "ADC TEST", RED);
-	lcd_show_string(30, 90, 200, 16, 16, "YSC@burningCloud", RED);
+	// tp_dev.init();                          /* 触摸屏初始化 */
+	// lcd_show_string(30, 30, 200, 32, 32, "STM32", RED);
+	// lcd_show_string(30, 70, 200, 16, 16, "ADC TEST", RED);
+	// lcd_show_string(30, 90, 200, 16, 16, "YSC@burningCloud", RED);
 
-    if (tp_dev.touchtype != 0XFF)
-    {
-        lcd_show_string(30, 110, 200, 16, 16, "Press KEY0 to Adjust", RED); /* 电阻屏才显示 */
-    }
+    // if (tp_dev.touchtype != 0XFF)
+    // {
+    //     lcd_show_string(30, 110, 200, 16, 16, "Press KEY0 to Adjust", RED); /* 电阻屏才显示 */
+    // }
 
-    delay_ms(1500);
-    load_draw_dialog();
+    // delay_ms(1500);
+    // load_draw_dialog();
 
-    if (tp_dev.touchtype & 0X80)
-    {
-        ctp_test(); /* 电容屏测试 */
-    }
-    else
-    {
-        rtp_test(); /* 电阻屏测试 */
-    }
+    // if (tp_dev.touchtype & 0X80)
+    // {
+    //     ctp_test(); /* 电容屏测试 */
+    // }
+    // else
+    // {
+    //     rtp_test(); /* 电阻屏测试 */
+    // }
 
 	
 

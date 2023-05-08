@@ -83,3 +83,5 @@
 ..\..\output\main.o: ..\..\Drivers\./BSP/TOUCH/touch.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/TOUCH/gt9xxx.h
 ..\..\output\main.o: ..\..\Drivers\./BSP/TOUCH/ft5206.h
+..\..\output\main.o: ..\..\Drivers\./BSP/NRF24L01/nrf24l01.h
+..\..\output\main.o: ..\..\Drivers\./BSP/STMFLASH/stmflash.h

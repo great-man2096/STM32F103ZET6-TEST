@@ -49,6 +49,27 @@
 
 /******************************************************************************************/
 
+/******************************************************************************************/
+/* SPI1 引脚 定义 */
+
+#define SPI1_SCK_GPIO_PORT              GPIOA
+#define SPI1_SCK_GPIO_PIN               GPIO_PIN_5
+#define SPI1_SCK_GPIO_CLK_ENABLE()      do{ __HAL_RCC_GPIOA_CLK_ENABLE(); }while(0)   /* PB口时钟使能 */
+
+#define SPI1_MISO_GPIO_PORT             GPIOA
+#define SPI1_MISO_GPIO_PIN              GPIO_PIN_6
+#define SPI1_MISO_GPIO_CLK_ENABLE()     do{ __HAL_RCC_GPIOA_CLK_ENABLE(); }while(0)   /* PB口时钟使能 */
+
+#define SPI1_MOSI_GPIO_PORT             GPIOA
+#define SPI1_MOSI_GPIO_PIN              GPIO_PIN_7
+#define SPI1_MOSI_GPIO_CLK_ENABLE()     do{ __HAL_RCC_GPIOA_CLK_ENABLE(); }while(0)   /* PB口时钟使能 */
+
+/* SPI1相关定义 */
+#define SPI1_SPI                        SPI1
+#define SPI1_SPI_CLK_ENABLE()           do{ __HAL_RCC_SPI1_CLK_ENABLE(); }while(0)    /* SPI2时钟使能 */
+
+/******************************************************************************************/
+
 
 /* SPI总线速度设置 */
 #define SPI_SPEED_2         0
@@ -64,6 +85,10 @@
 void spi2_init(void);
 void spi2_set_speed(uint8_t speed);
 uint8_t spi2_read_write_byte(uint8_t txdata);
+
+void spi1_init(void);
+void spi1_set_speed(uint8_t speed);
+uint8_t spi1_read_write_byte(uint8_t txdata);
 
 #endif
 
