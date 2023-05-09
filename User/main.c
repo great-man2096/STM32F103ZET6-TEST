@@ -42,6 +42,8 @@
 #include "./BSP/TOUCH/touch.h"
 #include "./BSP/NRF24L01/nrf24l01.h"
 #include "./BSP/STMFLASH/stmflash.h"
+#include "./BSP/SRAM/sram.h"
+#include "./MALLOC/malloc.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -86,14 +88,14 @@ void showtime(void)
 // const uint8_t g_text_buf[] = {"STM32 SPI TEST"};	//const,表示它是一个不可变的常量
 
 // #define TEXT_SIZE sizeof(g_text_buf) /* TEXT字符串长度 */
-/* 要写入到STM32 FLASH的字符串数组 */
-const uint8_t g_text_buf[] = {"STM32 FLASH TEST"};
-#define TEXT_LENTH sizeof(g_text_buf) /* 数组长度 */
-/*SIZE表示半字长(2字节), 大小必须是2的整数倍, 如果不是的话, 强制对齐到2的整数倍 */
-#define SIZE TEXT_LENTH / 2 + ((TEXT_LENTH % 2) ? 1 : 0)
-#define FLASH_SAVE_ADDR 0X08010000 /* 设置FLASH 保存地址(必须为偶数，且其值要大于本代码所占用FLASH的大小（Code+RO-data+RW-data） + 0X08000000) */
+// /* 要写入到STM32 FLASH的字符串数组 */
+// const uint8_t g_text_buf[] = {"STM32 FLASH TEST"};
+// #define TEXT_LENTH sizeof(g_text_buf) /* 数组长度 */
+// /*SIZE表示半字长(2字节), 大小必须是2的整数倍, 如果不是的话, 强制对齐到2的整数倍 */
+// #define SIZE TEXT_LENTH / 2 + ((TEXT_LENTH % 2) ? 1 : 0)
+// #define FLASH_SAVE_ADDR 0X08010000 /* 设置FLASH 保存地址(必须为偶数，且其值要大于本代码所占用FLASH的大小（Code+RO-data+RW-data） + 0X08000000) */
 
-
+const char *SRAM_NAME_BUF[SRAMBANK] = {" SRAMIN ", " SRAMEX "};
 
 int main(void)
 {
@@ -106,45 +108,135 @@ int main(void)
 	key_init();							/* 初始化按键 */
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
+
+	/******************************************************
+	内存管理实验
+	*******************************************************/	
+	uint8_t paddr[20];  /* 存放P Addr:+p地址的ASCII值 */
+    uint16_t memused = 0;
+    uint8_t i = 0;
+    uint8_t *p = 0;
+    uint8_t *tp = 0;
+    uint8_t sramx = 0;  /* 默认为内部sram */
+	// sram_init();                        /* SRAM初始化 */
+    my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
+    // my_mem_init(SRAMEX);                /* 初始化外部SRAM内存池 */
+
+    lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    lcd_show_string(30,  70, 200, 16, 16, "MALLOC TEST", RED);
+    lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    lcd_show_string(30, 110, 200, 16, 16, "KEY0:Malloc & WR & Show", RED);
+    lcd_show_string(30, 130, 200, 16, 16, "KEY_UP:SRAMx KEY1:Free", RED);
+    lcd_show_string(60, 160, 200, 16, 16, " SRAMIN ", BLUE);
+    lcd_show_string(30, 176, 200, 16, 16, "SRAMIN   USED:", BLUE);
+    lcd_show_string(30, 192, 200, 16, 16, "SRAMEX   USED:", BLUE);
+
+	while (1)
+	{
+		if (key2_scan()) /* KEY0按下 */
+		{
+			printf("E0按下\r\n");
+			p = mymalloc(sramx, 2048); /* 申请2K字节,并写入内容,显示在lcd屏幕上面 */
+			printf("P Addr:0X%08X\r\n", p);
+			if (p != NULL)
+			{
+				printf("p != null\r\n");
+				sprintf((char *)p, "Memory Malloc Test%03d", i);		/* 向p写入一些内容 */
+				lcd_show_string(30, 260, 209, 16, 16, (char *)p, BLUE); /* 显示P的内容 */
+				printf("显示P的内容结束\r\n");
+			}
+		}
+
+		if (key1_scan()) /* KEY1按下 */
+		{
+			printf("C13按下\r\n");
+			myfree(sramx, p); /* 释放内存 */
+			p = 0;			  /* 指向空地址 */
+		}
+
+		if (key4_scan()) /* KEY UP按下 */
+		{
+			printf("A0按下\r\n");
+			sramx++;
+
+			if (sramx > 1)
+				sramx = 0;
+
+			lcd_show_string(60, 160, 200, 16, 16, (char *)SRAM_NAME_BUF[sramx], BLUE);
+		}
+
+		if (tp != p)
+		{
+			tp = p;
+			sprintf((char *)paddr, "P Addr:0X%08X", (uint32_t)tp);
+			lcd_show_string(30, 240, 209, 16, 16, (char *)paddr, BLUE); /* 显示p的地址 */
+
+			if (p)
+			{
+				lcd_show_string(30, 260, 280, 16, 16, (char *)p, BLUE); /* 显示P的内容 */
+			}
+			else
+			{
+				lcd_fill(30, 260, 209, 296, WHITE); /* p=0,清除显示 */
+			}
+		}
+
+		delay_ms(10);
+		i++;
+
+		if ((i % 20) == 0)
+		{
+			memused = my_mem_perused(SRAMIN);
+			sprintf((char *)paddr, "%d.%01d%%", memused / 10, memused % 10);
+			lcd_show_string(30 + 112, 176, 200, 16, 16, (char *)paddr, BLUE); /* 显示内部内存使用率 */
+
+			// memused = my_mem_perused(SRAMEX);
+			// sprintf((char *)paddr, "%d.%01d%%", memused / 10, memused % 10);
+			// lcd_show_string(30 + 112, 192, 200, 16, 16, (char *)paddr, BLUE); /* 显示TCM内存使用率 */
+
+			LED0_TOGGLE(); /* LED0闪烁 */
+		}
+	}
+
 	/******************************************************
 	stmflash实验
 	*******************************************************/
-    uint16_t i = 0;
-	uint8_t datatemp[SIZE];
+    // uint16_t i = 0;
+	// uint8_t datatemp[SIZE];
 
-	lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
-    lcd_show_string(30,  70, 200, 16, 16, "FLASH EEPROM TEST", RED);
-    lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
-    lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED);
+	// lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    // lcd_show_string(30,  70, 200, 16, 16, "FLASH EEPROM TEST", RED);
+    // lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    // lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED);
 
-    while (1)
-    {
+    // while (1)
+    // {
 
-        if (key2_scan()) /* KEY1按下,写入STM32 FLASH */
-        {
-            lcd_fill(0, 150, 239, 319, WHITE); /* 清除半屏 */
-            lcd_show_string(30, 150, 200, 16, 16, "Start Write FLASH....", RED);
-            stmflash_write(FLASH_SAVE_ADDR, (uint16_t *)g_text_buf, SIZE);
-            lcd_show_string(30, 150, 200, 16, 16, "FLASH Write Finished!", RED); /* 提示传送完成 */
-        }
+    //     if (key2_scan()) /* KEY1按下,写入STM32 FLASH */
+    //     {
+    //         lcd_fill(0, 150, 239, 319, WHITE); /* 清除半屏 */
+    //         lcd_show_string(30, 150, 200, 16, 16, "Start Write FLASH....", RED);
+    //         stmflash_write(FLASH_SAVE_ADDR, (uint16_t *)g_text_buf, SIZE);
+    //         lcd_show_string(30, 150, 200, 16, 16, "FLASH Write Finished!", RED); /* 提示传送完成 */
+    //     }
 
-        if (key1_scan()) /* KEY0按下,读取字符串并显示 */
-        {
-            lcd_show_string(30, 150, 200, 16, 16, "Start Read FLASH.... ", RED);
-            stmflash_read(FLASH_SAVE_ADDR, (uint16_t *)datatemp, SIZE);
-            lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:  ", RED); /* 提示传送完成 */
-            lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);       /* 显示读到的字符串 */
-        }
+    //     if (key1_scan()) /* KEY0按下,读取字符串并显示 */
+    //     {
+    //         lcd_show_string(30, 150, 200, 16, 16, "Start Read FLASH.... ", RED);
+    //         stmflash_read(FLASH_SAVE_ADDR, (uint16_t *)datatemp, SIZE);
+    //         lcd_show_string(30, 150, 200, 16, 16, "The Data Readed Is:  ", RED); /* 提示传送完成 */
+    //         lcd_show_string(30, 170, 200, 16, 16, (char *)datatemp, BLUE);       /* 显示读到的字符串 */
+    //     }
 
-        i++;
-        delay_ms(10);
+    //     i++;
+    //     delay_ms(10);
 
-        if (i == 20)
-        {
-            LED0_TOGGLE(); /* 提示系统正在运行 */
-            i = 0;
-        }
-    }
+    //     if (i == 20)
+    //     {
+    //         LED0_TOGGLE(); /* 提示系统正在运行 */
+    //         i = 0;
+    //     }
+    // }
 
 	/******************************************************
 	2.4G无线通讯实验
