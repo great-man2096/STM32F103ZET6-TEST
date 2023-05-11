@@ -38,6 +38,7 @@
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\NRF24L01",
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\STMFLASH",
                 "d:\\MDKProjects\\test02\\Drivers\\BSP\\SRAM",
+                "d:\\MDKProjects\\test02\\Drivers\\BSP\\SDIO",
                 "d:\\MDKProjects\\test02\\Middlewares\\USMART",
                 "d:\\MDKProjects\\test02\\Middlewares\\MALLOC"
             ],

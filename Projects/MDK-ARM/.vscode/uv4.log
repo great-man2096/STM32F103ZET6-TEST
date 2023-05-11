@@ -1,2 +1,8 @@
-Load "..\\..\\Output\\test02.axf" 
-Erase Done.Programming Done.Verify OK.Flash Load finished at 15:58:07
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\MDK5.36\ARM\ARMCC\Bin'
+Build target 'test02'
+compiling main.c...
+linking...
+Program Size: Code=39120 RO-data=13964 RW-data=532 ZI-data=55216  
+FromELF: creating hex file...
+"..\..\Output\test02.axf" - 0 Error(s), 0 Warning(s).
+Build Time Elapsed:  00:00:05
