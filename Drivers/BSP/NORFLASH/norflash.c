@@ -28,7 +28,7 @@
 #include "./BSP/NORFLASH/norflash.h"
 
 
-uint16_t g_norflash_type = W25Q32;     /* 改为W25Q32 */
+uint16_t g_norflash_type = W25Q64;     /* 改为W25Q64 */
 
 /**
  * @brief       初始化SPI NOR FLASH

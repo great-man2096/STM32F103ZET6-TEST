@@ -45,6 +45,7 @@
 #include "./BSP/SRAM/sram.h"
 #include "./MALLOC/malloc.h"
 #include "./BSP/SDIO/sdio_sdcard.h"
+#include "./FATFS/exfuns/exfuns.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -110,16 +111,19 @@ int main(void)
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
 	/******************************************************
-	SD卡实验
+	FATFS实验
 	*******************************************************/
-	uint8_t t = 0;
+	uint32_t total, free;
+    uint8_t t = 0;
+    uint8_t res = 0;
 
-	my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
 
-	lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
-    lcd_show_string(30,  70, 200, 16, 16, "SD TEST", RED);
+    my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
+
+    lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    lcd_show_string(30,  70, 200, 16, 16, "FATFS TEST", RED);
     lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
-    lcd_show_string(30, 110, 200, 16, 16, "KEY0:Read Sector 0", RED);
+    lcd_show_string(30, 110, 200, 16, 16, "Use USMART for test", RED);
 
     while (sd_init()) /* 检测不到SD卡 */
     {
@@ -127,34 +131,118 @@ int main(void)
         delay_ms(500);
         lcd_show_string(30, 130, 200, 16, 16, "Please Check! ", RED);
         delay_ms(500);
-        LED0_TOGGLE(); /* 红灯闪烁 */
+        LED0_TOGGLE(); /* LED0闪烁 */
     }
 
-    /* 打印SD卡相关信息 */
-    show_sdcard_info();
+    exfuns_init();                 /* 为fatfs相关变量申请内存 */
+	
+    f_mount(fs[0], "0:", 1);       /* 挂载SD卡 */
+    res = f_mount(fs[1], "1:", 1); /* 挂载FLASH. */
 
-    /* 检测SD卡成功 */
-    lcd_show_string(30, 130, 200, 16, 16, "SD Card OK    ", BLUE);
-    lcd_show_string(30, 150, 200, 16, 16, "SD Card Size:     MB", BLUE);
-    lcd_show_num(30 + 13 * 8, 150, SD_TOTAL_SIZE_MB(&g_sdcard_handler), 5, 16, BLUE); /* 显示SD卡容量 */
+    if (res == 0X0D) /* FLASH磁盘,FAT文件系统错误,重新格式化FLASH */
+    {
+        lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Formatting...", RED); /* 格式化FLASH */
+        res = f_mkfs("1:", 0, 0, FF_MAX_SS);                                    /* 格式化FLASH,1:,盘符;0,使用默认格式化参数 */
+
+        if (res == 0)
+        {
+            f_setlabel((const TCHAR *)"1:ALIENTEK");                                /* 设置Flash磁盘的名字为：ALIENTEK */
+            lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Format Finish", RED); /* 格式化完成 */
+        }
+        else
+            lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Format Error ", RED); /* 格式化失败 */
+
+        delay_ms(1000);
+    }
+
+    lcd_fill(30, 130, 240, 150 + 16, WHITE); /* 清除显示 */
+
+    while (exfuns_get_free((uint8_t*)"0", &total, &free)) /* 得到SD卡的总容量和剩余容量 */
+    {
+        lcd_show_string(30, 130, 200, 16, 16, "SD Card Fatfs Error!", RED);
+        delay_ms(200);
+        lcd_fill(30, 130, 240, 150 + 16, WHITE); /* 清除显示 */
+        delay_ms(200);
+        LED0_TOGGLE(); /* LED0闪烁 */
+    }
+
+    lcd_show_string(30, 130, 200, 16, 16, "FATFS OK!", BLUE);
+    lcd_show_string(30, 150, 200, 16, 16, "SD Total Size:     MB", BLUE);
+    lcd_show_string(30, 170, 200, 16, 16, "SD  Free Size:     MB", BLUE);
+    lcd_show_num(30 + 8 * 14, 150, total >> 10, 5, 16, BLUE); /* 显示SD卡总容量 MB */
+    lcd_show_num(30 + 8 * 14, 170, free >> 10, 5, 16, BLUE);  /* 显示SD卡剩余容量 MB */
+
+	/* 测试代码 */
+	// FIL fil;
+	// FRESULT mres;
+	// UINT bww;
+	// char buff[50];
+	// mres = f_open(&fil,"0:/test/MyNewFile.txt",FA_CREATE_ALWAYS|FA_WRITE);	//创建并进入写模式
+	// printf("open/FA_CREATE_ALWAYS|FA_WRITE:%d\r\n",mres);
+	// mres = f_write(&fil,"ysc yyds",50,&bww);
+	// printf("write:%d\r\n",mres);
+	// f_close(&fil);
+	// mres = f_open(&fil,"0:/test/MyNewFile.txt",FA_READ);
+	// printf("open/FA_READ:%d\r\n",mres);
+	// mres = f_read(&fil,&buff,50,&bww);
+	// printf("read:%d\r\n",mres);
+	// f_close(&fil);
+	// printf("%c",buff);
+	// lcd_show_string(30, 200, 210, 16, 16, (char *)buff, RED);
 
     while (1)
     {
-
-        if (key1_scan())   /* KEY0按下了 */
-        {
-            sd_test_read(0, 1); /* 从0扇区读取1*512字节的内容 */
-        }
-
         t++;
-        delay_ms(10);
-
-        if (t == 20)
-        {
-            LED0_TOGGLE(); /* 红灯闪烁 */
-            t = 0;
-        }
+        delay_ms(200);
+        LED0_TOGGLE(); /* LED0闪烁 */
     }
+
+	/******************************************************
+	SD卡实验
+	*******************************************************/
+	// uint8_t t = 0;
+
+	// my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
+
+	// lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    // lcd_show_string(30,  70, 200, 16, 16, "SD TEST", RED);
+    // lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    // lcd_show_string(30, 110, 200, 16, 16, "KEY0:Read Sector 0", RED);
+
+    // while (sd_init()) /* 检测不到SD卡 */
+    // {
+    //     lcd_show_string(30, 130, 200, 16, 16, "SD Card Error!", RED);
+    //     delay_ms(500);
+    //     lcd_show_string(30, 130, 200, 16, 16, "Please Check! ", RED);
+    //     delay_ms(500);
+    //     LED0_TOGGLE(); /* 红灯闪烁 */
+    // }
+
+    // /* 打印SD卡相关信息 */
+    // show_sdcard_info();
+
+    // /* 检测SD卡成功 */
+    // lcd_show_string(30, 130, 200, 16, 16, "SD Card OK    ", BLUE);
+    // lcd_show_string(30, 150, 200, 16, 16, "SD Card Size:     GB", BLUE);
+    // lcd_show_num(30 + 13 * 8, 150, SD_TOTAL_SIZE_GB(&g_sdcard_handler), 5, 16, BLUE); /* 显示SD卡容量 */
+
+    // while (1)
+    // {
+
+    //     if (key1_scan())   /* KEY0按下了 */
+    //     {
+    //         sd_test_read(0, 1); /* 从0扇区读取1*512字节的内容 */
+    //     }
+
+    //     t++;
+    //     delay_ms(10);
+
+    //     if (t == 20)
+    //     {
+    //         LED0_TOGGLE(); /* 红灯闪烁 */
+    //         t = 0;
+    //     }
+    // }
 
 	/******************************************************
 	内存管理实验

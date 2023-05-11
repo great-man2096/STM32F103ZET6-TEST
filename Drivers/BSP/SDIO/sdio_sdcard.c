@@ -230,7 +230,7 @@ void show_sdcard_info(void)
     printf("Card RCA:%d\r\n", g_sd_card_info_handle.RelCardAdd);                                                    /* 卡相对地址 */
     //printf("LogBlockNbr:%d \r\n", (uint32_t)(g_sd_card_info_handle.LogBlockNbr));    /* 显示逻辑块数量 */
     //printf("LogBlockSize:%d \r\n", (uint32_t)(g_sd_card_info_handle.LogBlockSize));  /* 显示逻辑块大小 */
-    printf("Card Capacity:%d MB\r\n", (uint32_t)SD_TOTAL_SIZE_MB(&g_sdcard_handler)); /* 显示容量 */
+    printf("Card Capacity:%d GB\r\n", (uint32_t)SD_TOTAL_SIZE_GB(&g_sdcard_handler)); /* 显示容量 */
     printf("Card BlockSize:%d\r\n\r\n", g_sd_card_info_handle.BlockSize);        /* 显示块大小 */
 }
 

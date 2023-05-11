@@ -10,6 +10,7 @@
 #include "./BSP/LCD/lcd.h"
 #include "./BSP/RTC/rtc.h"
 #include "./BSP/DAC/dac.h"
+#include "./FATFS/exfuns/fattester.h"
 
 extern void led_set(uint8_t sta);
 extern void test_fun(void(*ledset)(uint8_t), uint8_t sta);
@@ -49,6 +50,30 @@ struct _m_usmart_nametab usmart_nametab[] =
 		
 	(void *)rtc_set_time, "uint8_t rtc_set_time(uint16_t syear, uint8_t smon, uint8_t sday, uint8_t hour, uint8_t min, uint8_t sec)",
 	(void *)rtc_set_alarm, "uint8_t rtc_set_alarm(uint16_t syear, uint8_t smon, uint8_t sday, uint8_t hour, uint8_t min, uint8_t sec)",
+
+    /* 以下是FatFt相关命令 */
+    (void *)mf_mount, "uint8_t mf_mount(uint8_t* path,uint8_t mt)",
+    (void *)mf_open, "uint8_t mf_open(uint8_t*path,uint8_t mode)",
+    (void *)mf_close, "uint8_t mf_close(void)",
+    (void *)mf_read, "uint8_t mf_read(uint16_t len)",
+    (void *)mf_write, "uint8_t mf_write(uint8_t*dat,uint16_t len)",
+    (void *)mf_opendir, "uint8_t mf_opendir(uint8_t* path)",
+    (void *)mf_closedir, "uint8_t mf_closedir(void)",
+    (void *)mf_readdir, "uint8_t mf_readdir(void)",
+    (void *)mf_scan_files, "uint8_t mf_scan_files(uint8_t * path)",
+    (void *)mf_showfree, "uint32_t mf_showfree(uint8_t *path)",
+    (void *)mf_lseek, "uint8_t mf_lseek(uint32_t offset)",
+    (void *)mf_tell, "uint32_t mf_tell(void)",
+    (void *)mf_size, "uint32_t mf_size(void)",
+    (void *)mf_mkdir, "uint8_t mf_mkdir(uint8_t*path)",
+    (void *)mf_fmkfs, "uint8_t mf_fmkfs(uint8_t* path,uint8_t opt,uint16_t au)",
+    (void *)mf_unlink, "uint8_t mf_unlink(uint8_t *path)",
+    (void *)mf_rename, "uint8_t mf_rename(uint8_t *oldname,uint8_t* newname)",
+    (void *)mf_getlabel, "void mf_getlabel(uint8_t *path)",
+    (void *)mf_setlabel, "void mf_setlabel(uint8_t *path)",
+    (void *)mf_gets, "void mf_gets(uint16_t size)",
+    (void *)mf_putc, "uint8_t mf_putc(uint8_t c)",
+    (void *)mf_puts, "uint8_t mf_puts(uint8_t *str)",
 };
 
 /******************************************************************************************/
