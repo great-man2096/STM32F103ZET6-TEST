@@ -46,6 +46,14 @@
 #include "./MALLOC/malloc.h"
 #include "./BSP/SDIO/sdio_sdcard.h"
 #include "./FATFS/exfuns/exfuns.h"
+#include "./TEXT/fonts.h"
+#include "./TEXT/text.h"
+#include "./PICTURE/piclib.h"
+#include "string.h"
+#include "math.h"
+#include "./BSP/OLED/oled.h"
+#include "./BSP/GUI/GUI_Paint.h"
+#include "./TEXT/fonts.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -110,92 +118,419 @@ int main(void)
 	key_init();							/* 初始化按键 */
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
+	my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
+	/******************************************************
+	IIC点亮OLED实验
+	*******************************************************/
+	// printf("1.3inch OLED test demo\n");
+	
+	// printf("OLED Init...\r\n");
+	// OLED_Init();
+	// delay_ms(500);	
+	// // 0.Create a new image cache
+	// UBYTE *BlackImage;
+	// UWORD Imagesize = ((OLED_1IN3_WIDTH%8==0)? (OLED_1IN3_WIDTH/8): (OLED_1IN3_WIDTH/8+1)) * OLED_1IN3_HEIGHT;
+	// BlackImage = (UBYTE *)mymalloc(SRAMIN,Imagesize);
+	// printf("Paint_NewImage\r\n");
+	// Paint_NewImage(BlackImage, OLED_1IN3_WIDTH, OLED_1IN3_HEIGHT, 90, BLACK);	
+
+	// printf("Drawing\r\n");
+	// //1.Select Image
+	// Paint_SelectImage(BlackImage);
+	// delay_ms(500);
+	// Paint_Clear(BLACK);
+	// while(1) {
+		
+	// 	// 2.Drawing on the image		
+	// 	printf("Drawing:page 1\r\n");
+	// 	Paint_DrawPoint(20, 10, WHITE, DOT_PIXEL_1X1, DOT_STYLE_DFT);
+	// 	Paint_DrawPoint(30, 10, WHITE, DOT_PIXEL_2X2, DOT_STYLE_DFT);
+	// 	Paint_DrawPoint(40, 10, WHITE, DOT_PIXEL_3X3, DOT_STYLE_DFT);
+	// 	Paint_DrawLine(10, 10, 10, 20, WHITE, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+	// 	Paint_DrawLine(20, 20, 20, 30, WHITE, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+	// 	Paint_DrawLine(30, 30, 30, 40, WHITE, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);
+	// 	Paint_DrawLine(40, 40, 40, 50, WHITE, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);
+	// 	Paint_DrawCircle(60, 30, 15, WHITE, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+	// 	Paint_DrawCircle(100, 40, 20, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);			
+	// 	Paint_DrawRectangle(50, 30, 60, 40, WHITE, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+	// 	Paint_DrawRectangle(90, 30, 110, 50, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);		
+	// 	// 3.Show image on page1
+	// 	OLED_1IN3_Display(BlackImage);
+	// 	delay_ms(2000);			
+	// 	Paint_Clear(BLACK);
+		
+	// 	// Drawing on the image
+	// 	printf("Drawing:page 2\r\n");			
+	// 	Paint_DrawString_EN(10, 0, "waveshare", &Font16, WHITE, WHITE);
+	// 	Paint_DrawString_EN(10, 17, "hello world", &Font8, WHITE, WHITE);
+	// 	Paint_DrawNum(10, 30, 123.456789, &Font8, 4, WHITE, WHITE);
+	// 	Paint_DrawNum(10, 43, 987654, &Font12, 5, WHITE, WHITE);
+	// 	// Show image on page2
+	// 	OLED_1IN3_Display(BlackImage);
+	// 	delay_ms(2000);	
+	// 	Paint_Clear(BLACK);		
+		
+	// 	// Drawing on the image
+	// 	printf("Drawing:page 3\r\n");
+	// 	Paint_DrawString_CN(10, 0,"杨世昌", &Font12CN, WHITE, WHITE);
+	// 	Paint_DrawString_CN(0, 20, "你好 世界", &Font24CN, WHITE, WHITE);
+	// 	// Show image on page3
+	// 	OLED_1IN3_Display(BlackImage);
+	// 	delay_ms(2000);		
+	// 	Paint_Clear(BLACK);	
+
+	// 	// Drawing on the image
+	// 	printf("Drawing:page 4\r\n");
+	// 	OLED_1IN3_Display(gImage_1in3);
+	// 	delay_ms(2000);		
+	// 	Paint_Clear(BLACK);	
+
+	// }
+
+	/******************************************************
+	图片显示实验
+	*******************************************************/
+	// uint8_t res;
+    // DIR picdir;           /* 图片目录 */
+    // FILINFO *picfileinfo; /* 文件信息 */
+    // char *pname;          /* 带路径的文件名 */
+    // uint16_t totpicnum;   /* 图片文件总数 */
+    // uint16_t curindex;    /* 图片当前索引 */
+    // uint8_t pause = 0;    /* 暂停标记 */
+    // uint8_t t;
+    // uint16_t temp;
+    // uint32_t *picoffsettbl; /* 图片文件offset索引表 */
+	// exfuns_init();           /* 为fatfs相关变量申请内存 */
+    // f_mount(fs[0], "0:", 1); /* 挂载SD卡 */
+    // f_mount(fs[1], "1:", 1); /* 挂载FLASH */
+
+    // while (fonts_init()) /* 检查字库 */
+    // {
+    //     lcd_show_string(30, 50, 200, 16, 16, "Font Error!", RED);
+    //     delay_ms(200);
+    //     lcd_fill(30, 50, 240, 66, WHITE); /* 清除显示 */
+    //     delay_ms(200);
+    // }
+
+    // text_show_string(30,  50, 200, 16, "正点原子STM32开发板", 16, 0, RED);
+    // text_show_string(30,  70, 200, 16, "图片显示 实验", 16, 0, RED);
+    // text_show_string(30,  90, 200, 16, "KEY0:NEXT KEY1:PREV", 16, 0, RED);
+    // text_show_string(30, 110, 200, 16, "KEY_UP:PAUSE", 16, 0, RED);
+    // text_show_string(30, 130, 200, 16, "正点原子@ALIENTEK", 16, 0, RED);
+
+    // while (f_opendir(&picdir, "0:/PICTURE")) /* 打开图片文件夹 */
+    // {
+    //     text_show_string(30, 150, 240, 16, "PICTURE文件夹错误!", 16, 0, RED);
+    //     delay_ms(200);
+    //     lcd_fill(30, 150, 240, 186, WHITE); /* 清除显示 */
+    //     delay_ms(200);
+    // }
+
+    // totpicnum = pic_get_tnum("0:/PICTURE"); /* 得到总有效文件数 */
+
+    // while (totpicnum == NULL) /* 图片文件为0 */
+    // {
+    //     text_show_string(30, 150, 240, 16, "没有图片文件!", 16, 0, RED);
+    //     delay_ms(200);
+    //     lcd_fill(30, 150, 240, 186, WHITE); /* 清除显示 */
+    //     delay_ms(200);
+    // }
+
+    // picfileinfo = (FILINFO *)mymalloc(SRAMIN, sizeof(FILINFO)); /* 申请内存 */
+    // pname = mymalloc(SRAMIN, FF_MAX_LFN * 2 + 1);               /* 为带路径的文件名分配内存 */
+    // picoffsettbl = mymalloc(SRAMIN, 4 * totpicnum);             /* 申请4*totpicnum个字节的内存,用于存放图片索引 */
+
+    // while (!picfileinfo || !pname || !picoffsettbl) /* 内存分配出错 */
+    // {
+    //     text_show_string(30, 150, 240, 16, "内存分配失败!", 16, 0, RED);
+    //     delay_ms(200);
+    //     lcd_fill(30, 150, 240, 186, WHITE); /* 清除显示 */
+    //     delay_ms(200);
+    // }
+
+    // /* 记录索引 */
+    // res = f_opendir(&picdir, "0:/PICTURE"); /* 打开目录 */
+
+    // if (res == FR_OK)
+    // {
+    //     curindex = 0; /* 当前索引为0 */
+
+    //     while (1) /* 全部查询一遍 */
+    //     {
+    //         temp = picdir.dptr;                    /* 记录当前dptr偏移 */
+    //         res = f_readdir(&picdir, picfileinfo); /* 读取目录下的一个文件 */
+
+    //         if (res != FR_OK || picfileinfo->fname[0] == 0)
+    //             break; /* 错误了/到末尾了,退出 */
+
+    //         res = exfuns_file_type(picfileinfo->fname);
+
+    //         if ((res & 0XF0) == 0X50) /* 取高四位,看看是不是图片文件 */
+    //         {
+    //             picoffsettbl[curindex] = temp; /* 记录索引 */
+    //             curindex++;
+    //         }
+    //     }
+    // }
+
+    // text_show_string(30, 150, 240, 16, "开始显示...", 16, 0, RED);
+    // delay_ms(1500);
+    // piclib_init();                                         /* 初始化画图 */
+    // curindex = 0;                                          /* 从0开始显示 */
+    // res = f_opendir(&picdir, (const TCHAR *)"0:/PICTURE"); /* 打开目录 */
+
+    // while (res == FR_OK) /* 打开成功 */
+    // {
+    //     dir_sdi(&picdir, picoffsettbl[curindex]); /* 改变当前目录索引 */
+    //     res = f_readdir(&picdir, picfileinfo);    /* 读取目录下的一个文件 */
+
+    //     if (res != FR_OK || picfileinfo->fname[0] == 0)
+    //         break; /* 错误了/到末尾了,退出 */
+
+    //     strcpy((char *)pname, "0:/PICTURE/");                    /* 复制路径(目录) */
+    //     strcat((char *)pname, (const char *)picfileinfo->fname); /* 将文件名接在后面 */
+    //     lcd_clear(BLACK);
+    //     piclib_ai_load_picfile(pname, 0, 0, lcddev.width, lcddev.height, 1); /* 显示图片 */
+    //     text_show_string(2, 2, lcddev.width, 16, (char *)pname, 16, 1, RED); /* 显示图片名字 */
+    //     t = 0;
+
+    //     while (1)
+    //     {
+    //         if (t > 250)/* 模拟一次按下KEY0 */
+	// 		{
+	// 			curindex++;
+
+	// 			if (curindex >= totpicnum)
+	// 				curindex = 0; /* 到末尾的时候,自动从头开始 */
+
+	// 			break; 
+	// 		}
+
+    //         if ((t % 20) == 0)
+    //         {
+    //             LED0_TOGGLE(); /* LED0闪烁,提示程序正在运行. */
+    //         }
+
+    //         if (key2_scan()) /* 上一张 */
+    //         {
+    //             if (curindex)
+    //             {
+    //                 curindex--;
+    //             }
+    //             else
+    //             {
+    //                 curindex = totpicnum - 1;
+    //             }
+
+    //             break;
+    //         }
+    //         else if (key1_scan()) /* 下一张 */
+    //         {
+    //             curindex++;
+
+    //             if (curindex >= totpicnum)
+    //                 curindex = 0; /* 到末尾的时候,自动从头开始 */
+
+    //             break;
+    //         }
+    //         else if (key4_scan())
+    //         {
+    //             pause = !pause;
+    //             LED1(!pause); /* 暂停的时候LED1亮. */
+    //         }
+
+    //         if (pause == 0)
+    //             t++;
+
+    //         delay_ms(10);
+    //     }
+
+    //     res = 0;
+    // }
+
+    // myfree(SRAMIN, picfileinfo);  /* 释放内存 */
+    // myfree(SRAMIN, pname);        /* 释放内存 */
+    // myfree(SRAMIN, picoffsettbl); /* 释放内存 */
+
+	/******************************************************
+	汉字显示实验
+	*******************************************************/
+	// uint32_t fontcnt;
+    // uint8_t i, j;
+    // uint8_t fontx[2]; /* GBK码 */
+    // uint8_t key, t;
+
+	// exfuns_init();                      /* 为fatfs相关变量申请内存 */
+    // f_mount(fs[0], "0:", 1);            /* 挂载SD卡 */
+    // f_mount(fs[1], "1:", 1);            /* 挂载FLASH */
+
+    // while (fonts_init())                /* 检查字库 */
+    // {
+    // UPD:
+    //     lcd_clear(WHITE);               /* 清屏 */
+    //     lcd_show_string(30, 30, 200, 16, 16, "STM32", RED);
+
+    //     while (sd_init())               /* 检测SD卡 */
+    //     {
+    //         lcd_show_string(30, 50, 200, 16, 16, "SD Card Failed!", RED);
+    //         delay_ms(200);
+    //         lcd_fill(30, 50, 200 + 30, 50 + 16, WHITE);
+    //         delay_ms(200);
+    //     }
+
+    //     lcd_show_string(30, 50, 200, 16, 16, "SD Card OK", RED);
+    //     lcd_show_string(30, 70, 200, 16, 16, "Font Updating...", RED);
+    //     key = fonts_update_font(20, 90, 16, (uint8_t *)"0:", RED); /* 更新字库 */
+
+    //     while (key) /* 更新失败 */
+    //     {
+    //         lcd_show_string(30, 90, 200, 16, 16, "Font Update Failed!", RED);
+    //         delay_ms(200);
+    //         lcd_fill(20, 90, 200 + 20, 90 + 16, WHITE);
+    //         delay_ms(200);
+    //     }
+
+    //     lcd_show_string(30, 90, 200, 16, 16, "Font Update Success!   ", RED);
+    //     delay_ms(1500);
+    //     lcd_clear(WHITE); /* 清屏 */
+    // }
+
+    // text_show_string(30, 30, 200, 16, "正点原子STM32开发板", 16, 0, RED);
+    // text_show_string(30, 50, 200, 16, "GBK字库测试程序", 16, 0, RED);
+    // text_show_string(30, 70, 200, 16, "正点原子@ALIENTEK", 16, 0, RED);
+    // text_show_string(30, 90, 200, 16, "按KEY0,更新字库", 16, 0, RED);
+    
+    
+    // text_show_string(30, 110, 200, 16, "内码高字节:", 16, 0, BLUE);
+    // text_show_string(30, 130, 200, 16, "内码低字节:", 16, 0, BLUE);
+    // text_show_string(30, 150, 200, 16, "汉字计数器:", 16, 0, BLUE);
+    
+    // text_show_string(30, 180, 200, 24, "对应汉字为:", 24, 0, BLUE);
+    // text_show_string(30, 204, 200, 16, "对应汉字(16*16)为:", 16, 0, BLUE);
+    // text_show_string(30, 220, 200, 16, "对应汉字(12*12)为:", 12, 0, BLUE);
+
+    // while (1)
+    // {
+    //     fontcnt = 0;
+
+    //     for (i = 0x81; i < 0xff; i++) /* GBK内码高字节范围为0X81~0XFE */
+    //     {
+    //         fontx[0] = i;
+    //         lcd_show_num(118, 110, i, 3, 16, BLUE); /* 显示内码高字节 */
+
+    //         for (j = 0x40; j < 0xfe; j++) /* GBK内码低字节范围为 0X40~0X7E, 0X80~0XFE) */
+    //         {
+    //             if (j == 0x7f)
+    //                 continue;
+
+    //             fontcnt++;
+    //             lcd_show_num(118, 130, j, 3, 16, BLUE);       /* 显示内码低字节 */
+    //             lcd_show_num(118, 150, fontcnt, 5, 16, BLUE); /* 汉字计数显示 */
+    //             fontx[1] = j;
+    //             text_show_font(30 + 132, 180, fontx, 24, 0, BLUE);
+    //             text_show_font(30 + 144, 204, fontx, 16, 0, BLUE);
+    //             text_show_font(30 + 108, 220, fontx, 12, 0, BLUE);
+    //             t = 200;
+
+    //             while (t--) /* 延时,同时扫描按键 */
+    //             {
+    //                 delay_ms(1);
+
+    //                 if (key1_scan())
+    //                 {
+    //                     goto UPD; /* 跳转到UPD位置(强制更新字库) */
+    //                 }
+    //             }
+
+    //             LED0_TOGGLE();
+    //         }
+    //     }
+    // }
+
 	/******************************************************
 	FATFS实验
 	*******************************************************/
-	uint32_t total, free;
-    uint8_t t = 0;
-    uint8_t res = 0;
+	// uint32_t total, free;
+    // uint8_t t = 0;
+    // uint8_t res = 0;
+    // my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
 
+    // lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
+    // lcd_show_string(30,  70, 200, 16, 16, "FATFS TEST", RED);
+    // lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    // lcd_show_string(30, 110, 200, 16, 16, "Use USMART for test", RED);
 
-    my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
+    // while (sd_init()) /* 检测不到SD卡 */
+    // {
+    //     lcd_show_string(30, 130, 200, 16, 16, "SD Card Error!", RED);
+    //     delay_ms(500);
+    //     lcd_show_string(30, 130, 200, 16, 16, "Please Check! ", RED);
+    //     delay_ms(500);
+    //     LED0_TOGGLE(); /* LED0闪烁 */
+    // }
 
-    lcd_show_string(30,  50, 200, 16, 16, "STM32", RED);
-    lcd_show_string(30,  70, 200, 16, 16, "FATFS TEST", RED);
-    lcd_show_string(30,  90, 200, 16, 16, "ATOM@ALIENTEK", RED);
-    lcd_show_string(30, 110, 200, 16, 16, "Use USMART for test", RED);
-
-    while (sd_init()) /* 检测不到SD卡 */
-    {
-        lcd_show_string(30, 130, 200, 16, 16, "SD Card Error!", RED);
-        delay_ms(500);
-        lcd_show_string(30, 130, 200, 16, 16, "Please Check! ", RED);
-        delay_ms(500);
-        LED0_TOGGLE(); /* LED0闪烁 */
-    }
-
-    exfuns_init();                 /* 为fatfs相关变量申请内存 */
+    // exfuns_init();                 /* 为fatfs相关变量申请内存 */
 	
-    f_mount(fs[0], "0:", 1);       /* 挂载SD卡 */
-    res = f_mount(fs[1], "1:", 1); /* 挂载FLASH. */
+    // f_mount(fs[0], "0:", 1);       /* 挂载SD卡 */
+    // res = f_mount(fs[1], "1:", 1); /* 挂载FLASH. */
 
-    if (res == 0X0D) /* FLASH磁盘,FAT文件系统错误,重新格式化FLASH */
-    {
-        lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Formatting...", RED); /* 格式化FLASH */
-        res = f_mkfs("1:", 0, 0, FF_MAX_SS);                                    /* 格式化FLASH,1:,盘符;0,使用默认格式化参数 */
+    // if (res == 0X0D) /* FLASH磁盘,FAT文件系统错误,重新格式化FLASH */
+    // {
+    //     lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Formatting...", RED); /* 格式化FLASH */
+    //     res = f_mkfs("1:", 0, 0, FF_MAX_SS);                                    /* 格式化FLASH,1:,盘符;0,使用默认格式化参数 */
 
-        if (res == 0)
-        {
-            f_setlabel((const TCHAR *)"1:ALIENTEK");                                /* 设置Flash磁盘的名字为：ALIENTEK */
-            lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Format Finish", RED); /* 格式化完成 */
-        }
-        else
-            lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Format Error ", RED); /* 格式化失败 */
+    //     if (res == 0)
+    //     {
+    //         f_setlabel((const TCHAR *)"1:ALIENTEK");                                /* 设置Flash磁盘的名字为：ALIENTEK */
+    //         lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Format Finish", RED); /* 格式化完成 */
+    //     }
+    //     else
+    //         lcd_show_string(30, 130, 200, 16, 16, "Flash Disk Format Error ", RED); /* 格式化失败 */
 
-        delay_ms(1000);
-    }
+    //     delay_ms(1000);
+    // }
 
-    lcd_fill(30, 130, 240, 150 + 16, WHITE); /* 清除显示 */
+    // lcd_fill(30, 130, 240, 150 + 16, WHITE); /* 清除显示 */
 
-    while (exfuns_get_free((uint8_t*)"0", &total, &free)) /* 得到SD卡的总容量和剩余容量 */
-    {
-        lcd_show_string(30, 130, 200, 16, 16, "SD Card Fatfs Error!", RED);
-        delay_ms(200);
-        lcd_fill(30, 130, 240, 150 + 16, WHITE); /* 清除显示 */
-        delay_ms(200);
-        LED0_TOGGLE(); /* LED0闪烁 */
-    }
+    // while (exfuns_get_free((uint8_t*)"0", &total, &free)) /* 得到SD卡的总容量和剩余容量 */
+    // {
+    //     lcd_show_string(30, 130, 200, 16, 16, "SD Card Fatfs Error!", RED);
+    //     delay_ms(200);
+    //     lcd_fill(30, 130, 240, 150 + 16, WHITE); /* 清除显示 */
+    //     delay_ms(200);
+    //     LED0_TOGGLE(); /* LED0闪烁 */
+    // }
 
-    lcd_show_string(30, 130, 200, 16, 16, "FATFS OK!", BLUE);
-    lcd_show_string(30, 150, 200, 16, 16, "SD Total Size:     MB", BLUE);
-    lcd_show_string(30, 170, 200, 16, 16, "SD  Free Size:     MB", BLUE);
-    lcd_show_num(30 + 8 * 14, 150, total >> 10, 5, 16, BLUE); /* 显示SD卡总容量 MB */
-    lcd_show_num(30 + 8 * 14, 170, free >> 10, 5, 16, BLUE);  /* 显示SD卡剩余容量 MB */
+    // lcd_show_string(30, 130, 200, 16, 16, "FATFS OK!", BLUE);
+    // lcd_show_string(30, 150, 200, 16, 16, "SD Total Size:     MB", BLUE);
+    // lcd_show_string(30, 170, 200, 16, 16, "SD  Free Size:     MB", BLUE);
+    // lcd_show_num(30 + 8 * 14, 150, total >> 10, 5, 16, BLUE); /* 显示SD卡总容量 MB */
+    // lcd_show_num(30 + 8 * 14, 170, free >> 10, 5, 16, BLUE);  /* 显示SD卡剩余容量 MB */
 
-	/* 测试代码 */
-	// FIL fil;
-	// FRESULT mres;
-	// UINT bww;
-	// char buff[50];
-	// mres = f_open(&fil,"0:/test/MyNewFile.txt",FA_CREATE_ALWAYS|FA_WRITE);	//创建并进入写模式
-	// printf("open/FA_CREATE_ALWAYS|FA_WRITE:%d\r\n",mres);
-	// mres = f_write(&fil,"ysc yyds",50,&bww);
-	// printf("write:%d\r\n",mres);
-	// f_close(&fil);
-	// mres = f_open(&fil,"0:/test/MyNewFile.txt",FA_READ);
-	// printf("open/FA_READ:%d\r\n",mres);
-	// mres = f_read(&fil,&buff,50,&bww);
-	// printf("read:%d\r\n",mres);
-	// f_close(&fil);
-	// printf("%c",buff);
-	// lcd_show_string(30, 200, 210, 16, 16, (char *)buff, RED);
+	// /* 测试代码 */
+	// // FIL fil;
+	// // FRESULT mres;
+	// // UINT bww;
+	// // char buff[50];
+	// // mres = f_open(&fil,"0:/test/MyNewFile.txt",FA_CREATE_ALWAYS|FA_WRITE);	//创建并进入写模式
+	// // printf("open/FA_CREATE_ALWAYS|FA_WRITE:%d\r\n",mres);
+	// // mres = f_write(&fil,"ysc yyds",50,&bww);
+	// // printf("write:%d\r\n",mres);
+	// // f_close(&fil);
+	// // mres = f_open(&fil,"0:/test/MyNewFile.txt",FA_READ);
+	// // printf("open/FA_READ:%d\r\n",mres);
+	// // mres = f_read(&fil,&buff,50,&bww);
+	// // printf("read:%d\r\n",mres);
+	// // f_close(&fil);
+	// // printf("%c",buff);
+	// // lcd_show_string(30, 200, 210, 16, 16, (char *)buff, RED);
 
-    while (1)
-    {
-        t++;
-        delay_ms(200);
-        LED0_TOGGLE(); /* LED0闪烁 */
-    }
+    // while (1)
+    // {
+    //     t++;
+    //     delay_ms(200);
+    //     LED0_TOGGLE(); /* LED0闪烁 */
+    // }
 
 	/******************************************************
 	SD卡实验
@@ -636,7 +971,7 @@ int main(void)
 	// lcd_show_string(30, 70, 200, 16, 16, "IIC TEST", RED);
 	// lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
 	// lcd_show_string(30, 110, 200, 16, 16, "KEY1:Write  KEY0:Read", RED);    /* 显示提示信息 */
-	// while (at24cx x_check()) /* 检测不到24c02 */
+	// while (at24cxx_check()) /* 检测不到24c02 */
 	// {
 	//     lcd_show_string(30, 130, 200, 16, 16, "24C02 Check Failed!", RED);
 	//     lcd_show_string(30, 146, 200, 16, 16, "Please Check!      ", RED);
@@ -1606,27 +1941,27 @@ int main(void)
 	//	 }
 
 	// 跑马灯实验
-	//	   while(1)
-	//     {
-	//         LED0(0);
-	//		LED1(1);
-	//		delay_ms(500);
-	//		LED0(1);
-	//		LED1(0);
-	//		delay_ms(500);
-	//     }
-	// 按键实验
-	//	while(1){
-	//		if(key1_long_scan()){
-	//			LED0_TOGGLE();
-	//		}
-	//		else if(key2_scan())
-	//			{
-	//				LED1_TOGGLE();
-	//			}
-	//		else
-	//		{
-	//			delay_ms(10);//允许误差10ms,消除抖动
-	//		}
-	//	}
+		// while(1)
+	    // {
+	    //     LED0(0);
+		// 	LED1(1);
+		// 	delay_ms(500);
+		// 	LED0(1);
+		// 	LED1(0);
+		// 	delay_ms(500);
+	    // }
+	//按键实验
+		// while(1){
+		// 	if(key1_long_scan()){
+		// 		LED0_TOGGLE();
+		// 	}
+		// 	else if(key2_scan())
+		// 		{
+		// 			LED1_TOGGLE();
+		// 		}
+		// 	else
+		// 	{
+		// 		delay_ms(10);//允许误差10ms,消除抖动
+		// 	}
+		// }
 }

@@ -337,7 +337,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_HAL_DRIVER,STM32F103xE</Define>
+              <Define>USE_HAL_DRIVER,STM32F103xE,ARM_MATH_CM3,__CC_ARM,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING</Define>
               <Undefine></Undefine>
               <IncludePath>..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers;..\..\User;..\..\Middlewares</IncludePath>
             </VariousControls>
@@ -716,6 +716,51 @@
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\BSP\SDIO\sdio_sdcard.c</FilePath>
             </File>
+            <File>
+              <FileName>GUI_Paint.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\GUI\GUI_Paint.c</FilePath>
+            </File>
+            <File>
+              <FileName>font8.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\Fonts\font8.c</FilePath>
+            </File>
+            <File>
+              <FileName>font12.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\Fonts\font12.c</FilePath>
+            </File>
+            <File>
+              <FileName>font12CN.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\Fonts\font12CN.c</FilePath>
+            </File>
+            <File>
+              <FileName>font16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\Fonts\font16.c</FilePath>
+            </File>
+            <File>
+              <FileName>font20.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\Fonts\font20.c</FilePath>
+            </File>
+            <File>
+              <FileName>font24.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\Fonts\font24.c</FilePath>
+            </File>
+            <File>
+              <FileName>font24CN.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\Fonts\font24CN.c</FilePath>
+            </File>
+            <File>
+              <FileName>oled.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\BSP\OLED\oled.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -762,11 +807,6 @@
               <FilePath>..\..\Middlewares\FATFS\source\ffsystem.c</FilePath>
             </File>
             <File>
-              <FileName>ffunicode.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Middlewares\FATFS\source\ffunicode.c</FilePath>
-            </File>
-            <File>
               <FileName>exfuns.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Middlewares\FATFS\exfuns\exfuns.c</FilePath>
@@ -775,6 +815,51 @@
               <FileName>fattester.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Middlewares\FATFS\exfuns\fattester.c</FilePath>
+            </File>
+            <File>
+              <FileName>fonts.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\TEXT\fonts.c</FilePath>
+            </File>
+            <File>
+              <FileName>text.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\TEXT\text.c</FilePath>
+            </File>
+            <File>
+              <FileName>bmp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\PICTURE\bmp.c</FilePath>
+            </File>
+            <File>
+              <FileName>gif.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\PICTURE\gif.c</FilePath>
+            </File>
+            <File>
+              <FileName>piclib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\PICTURE\piclib.c</FilePath>
+            </File>
+            <File>
+              <FileName>tjpgd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\PICTURE\tjpgd.c</FilePath>
+            </File>
+            <File>
+              <FileName>myffunicode.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\FATFS\exfuns\myffunicode.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Drivers/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>arm_cortexM3l_math.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\Drivers\CMSIS\Lib\ARM\arm_cortexM3l_math.lib</FilePath>
             </File>
           </Files>
         </Group>

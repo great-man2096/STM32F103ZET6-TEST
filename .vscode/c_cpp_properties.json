@@ -3,19 +3,28 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "d:\\MDKProjects\\test02/**"
             ],
             "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE",
+                "STM32F103xE",
                 "USE_HAL_DRIVER",
-                "STM32F103xE"
+                "ARM_MATH_CM3",
+                "__CC_ARM",
+                "ARM_MATH_MATRIX_CHECK",
+                "ARM_MATH_ROUNDING"
             ],
             "compilerPath": "C:\\mingw64\\bin\\gcc.exe",
             "cStandard": "c99",
             "cppStandard": "c++11",
-            "intelliSenseMode": "${default}"
+            "intelliSenseMode": "gcc-arm",
+            "compilerPathInCppPropertiesJson": "C:\\mingw64\\bin\\gcc.exe",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         }
     ],
     "version": 4
