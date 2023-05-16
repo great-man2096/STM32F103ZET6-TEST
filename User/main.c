@@ -54,6 +54,8 @@
 #include "./BSP/OLED/oled.h"
 #include "./BSP/GUI/GUI_Paint.h"
 #include "./TEXT/fonts.h"
+#include "./ATKNCR/atk_ncr.h"
+#include "./T9INPUT/pyinput.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -106,6 +108,12 @@ void showtime(void)
 // #define FLASH_SAVE_ADDR 0X08010000 /* 设置FLASH 保存地址(必须为偶数，且其值要大于本代码所占用FLASH的大小（Code+RO-data+RW-data） + 0X08000000) */
 
 // const char *SRAM_NAME_BUF[SRAMBANK] = {" SRAMIN ", " SRAMEX "};
+/* 最大记录的轨迹点数(输入数据) */
+// atk_ncr_point ncr_input_buf[200];
+extern uint16_t kbdxsize;  /* 虚拟键盘按键宽度 */
+extern uint16_t kbdysize;  /* 虚拟键盘按键高度 */
+
+
 
 int main(void)
 {
@@ -118,7 +126,299 @@ int main(void)
 	key_init();							/* 初始化按键 */
 	rtc_init();							// RTC初始化
 	lcd_init();							/* LCD初始化 */
-	my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
+
+	tp_dev.init();              		/* 初始化触摸屏 */
+	// my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
+	norflash_init();            		/* 初始化NORFLASH */
+	exfuns_init();                      /* 为fatfs相关变量申请内存 */
+	f_mount(fs[0], "0:", 1);            /* 挂载SD卡 */
+	f_mount(fs[1], "1:", 1);            /* 挂载FLASH */
+	/******************************************************
+	T9 拼音输入法实验
+	*******************************************************/
+	uint8_t i = 0;
+    uint8_t result_num;
+    uint8_t cur_index;
+    uint8_t key;
+    uint8_t temp;
+    uint8_t inputstr[7];                        /* 最大输入6个字符+结束符 */
+    uint8_t inputlen;                           /* 输入长度 */
+    
+RESTART:
+    while (fonts_init())                        /* 检查字库 */
+    {
+        lcd_show_string(60, 50, 200, 16, 16, "Font Error!", RED);
+        delay_ms(200);
+        lcd_fill(60, 50, 240, 66, WHITE);   /* 清除显示 */
+        delay_ms(200);
+    }
+
+    text_show_string(30, 5, 200, 16, "正点原子STM32开发板", 16, 0, RED);
+    text_show_string(30, 25, 200, 16, "拼音输入法实验", 16, 0, RED);
+    text_show_string(30, 45, 200, 16, "正点原子@ALIENTEK", 16, 0, RED);
+    text_show_string(30, 65, 200, 16, "KEY_UP:校准", 16, 0, RED);
+    text_show_string(30, 85, 200, 16, "KEY0:翻页  KEY1:清除", 16, 0, RED);
+    text_show_string(30, 105, 200, 16, "输入:        匹配:  ", 16, 0, RED);
+    text_show_string(30, 125, 200, 16, "拼音:        当前:  ", 16, 0, RED);
+    text_show_string(30, 145, 210, 32, "结果:", 16, 0, RED);
+
+    /* 根据LCD分辨率设置按键大小 */
+    if (lcddev.id == 0X5310)
+    {
+        kbdxsize = 86;    
+        kbdysize = 43;
+    }
+    else if (lcddev.id == 0X5510)
+    {
+        kbdxsize = 140;
+        kbdysize = 70;
+    }
+    else
+    {
+        kbdxsize = 60;
+        kbdysize = 40;
+    }
+
+    py_load_ui(30, 195);
+    my_mem_set(inputstr, 0, 7); /* 全部清零 */
+    inputlen = 0;   /* 输入长度为0 */
+    result_num = 0; /* 总匹配数清零 */
+    cur_index = 0;
+
+    while (1)
+    {
+        i++;
+        delay_ms(10);
+        key = py_get_keynum(30, 195);
+
+        if (key)
+        {
+            if (key == 1)   /* 删除 */
+            {
+                if (inputlen)inputlen--;
+
+                inputstr[inputlen] = '\0';      /* 添加结束符 */
+            }
+            else
+            {
+                inputstr[inputlen] = key + '0'; /* 输入字符 */
+
+                if (inputlen < 7)inputlen++;
+            }
+
+            if (inputstr[0] != NULL)
+            {
+                temp = t9.getpymb(inputstr);     /* 得到匹配的结果数 */
+
+                if (temp)   /* 有部分匹配/完全匹配的结果 */
+                {
+                    result_num = temp & 0X7F;   /* 总匹配结果 */
+                    cur_index = 1;              /* 当前为第一个索引 */
+
+                    if (temp & 0X80)            /* 是部分匹配 */
+                    {
+                        inputlen = temp & 0X7F; /* 有效匹配位数 */
+                        inputstr[inputlen] = '\0';  /* 不匹配的位数去掉 */
+
+                        if (inputlen > 1)
+                        {
+                            temp = t9.getpymb(inputstr);    /* 重新获取完全匹配字符数 */
+                            result_num = (temp & 0X80)? 0 : (temp & 0X7F); /* 如果还是部分匹配, 直接匹配数为0, 否则表示匹配数量 */
+                        }
+                    }
+                }
+                else    /* 没有任何匹配 */
+                {
+                    inputlen--;
+                    inputstr[inputlen] = '\0';
+                }
+            }
+            else
+            {
+                cur_index = 0;
+                result_num = 0;
+            }
+
+            lcd_fill(30 + 40, 105, 30 + 40 + 48, 110 + 16, WHITE);      /* 清除之前的显示 */
+            lcd_show_num(30 + 144, 105, result_num, 1, 16, BLUE);       /* 显示匹配的结果数 */
+            text_show_string(30 + 40, 105, 200, 16, (char *)inputstr, 16, 0, BLUE); /* 显示有效的数字串 */
+            py_show_result(cur_index);  /* 显示第cur_index的匹配结果 */
+        }
+
+		if (key4_scan() && tp_dev.touchtype == 0) /* KEYUP按下,且是电阻屏 */
+		{
+			tp_dev.adjust();
+			lcd_clear(WHITE);
+			goto RESTART;
+		}
+
+		if (key1_scan())
+		{					/* 下翻 */
+			if (result_num) /* 存在匹配的结果 */
+			{
+				if (cur_index < result_num)
+					cur_index++;
+				else
+					cur_index = 1;
+
+				py_show_result(cur_index); /* 显示第cur_index的匹配结果 */
+			}
+		}
+
+		if (key2_scan()) /* 清除输入 */
+		{
+			lcd_fill(30 + 40, 145, lcddev.width - 1, 145 + 48, WHITE); /* 清除之前的显示 */
+			goto RESTART;
+		}
+
+		if (i == 30)
+        {
+            i = 0;
+            LED0_TOGGLE();
+        }
+    }
+
+	/******************************************************
+	手写识别实验
+	*******************************************************/
+//     uint8_t i = 0;
+//     uint8_t tcnt = 0;
+//     char sbuf[10];
+//     uint16_t pcnt = 0;
+//     uint8_t mode = 4;                   /* 默认是混合模式 */
+//     uint16_t lastpos[2];                /* 最后一次的数据 */
+
+// 	alientek_ncr_init();                /* 初始化手写识别 */
+
+// 	while (fonts_init())                /* 检查字库 */
+//     {
+//         lcd_show_string(60, 50, 200, 16, 16, "Font Error!", RED);
+//         delay_ms(200);
+//         lcd_fill(60, 50, 240, 66, WHITE); /* 清除显示 */
+//         delay_ms(200);
+//     }
+
+// RESTART:
+//     text_show_string(60, 10, 200, 16, "正点原子STM32开发板", 16, 0, RED);
+//     text_show_string(60, 30, 200, 16, "手写识别实验", 16, 0, RED);
+//     text_show_string(60, 50, 200, 16, "正点原子@ALIENTEK", 16, 0, RED);
+//     text_show_string(60, 70, 200, 16, "KEY0:MODE KEY1:Adjust", 16, 0, RED);
+//     text_show_string(60, 90, 200, 16, "识别结果:", 16, 0, RED);
+//     lcd_draw_rectangle(19, 114, lcddev.width - 20, lcddev.height - 5, RED);
+
+//     text_show_string(96, 207, 200, 16, "手写区", 16, 0, BLUE);
+//     tcnt = 100;
+
+//     while (1)
+//     {
+
+//         if (key1_scan() && (tp_dev.touchtype & 0X80) == 0)
+//         {
+// 			lcd_clear(WHITE);   /* 清屏 */
+//             tp_adjust();        /* 屏幕校准 */
+//             tp_save_adjust_data();
+//             goto RESTART;       /* 重新加载界面 */
+//         }
+
+//         if (key2_scan())
+//         {
+//             lcd_fill(20, 115, 219, 314, WHITE); /* 清除当前显示 */
+//             mode++;
+
+//             if (mode > 4)mode = 1;
+
+//             switch (mode)
+//             {
+//                 case 1:
+//                     text_show_string(80, 207, 200, 16, "仅识别数字", 16, 0, BLUE);
+//                     break;
+
+//                 case 2:
+//                     text_show_string(64, 207, 200, 16, "仅识别大写字母", 16, 0, BLUE);
+//                     break;
+
+//                 case 3:
+//                     text_show_string(64, 207, 200, 16, "仅识别小写字母", 16, 0, BLUE);
+//                     break;
+
+//                 case 4:
+//                     text_show_string(88, 207, 200, 16, "全部识别", 16, 0, BLUE);
+//                     break;
+//             }
+
+//             tcnt = 100;
+//         }
+
+//         tp_dev.scan(0); /* 扫描 */
+
+//         if (tp_dev.sta & TP_PRES_DOWN)  /* 有按键被按下 */
+//         {
+//             delay_ms(1);    /* 必要的延时, 否则老认为有按键按下 */
+//             tcnt = 0;       /* 松开时的计数器清空 */
+
+//             if ((tp_dev.x[0] < (lcddev.width - 20 - 2) && tp_dev.x[0] >= (20 + 2)) && (tp_dev.y[0] < (lcddev.height - 5 - 2) && tp_dev.y[0] >= (115 + 2)))
+// 			// if (tp_dev.x[0] < lcddev.width && tp_dev.y[0] < lcddev.height)
+//             {
+//                 if (lastpos[0] == 0XFFFF)
+//                 {
+//                     lastpos[0] = tp_dev.x[0];
+//                     lastpos[1] = tp_dev.y[0];
+//                 }
+
+//                 lcd_draw_bline(lastpos[0], lastpos[1], tp_dev.x[0], tp_dev.y[0], 2, BLUE);  /* 画线 */
+// 				tp_draw_big_point(tp_dev.x[0], tp_dev.y[0], RED);   /* 画点 */
+//                 lastpos[0] = tp_dev.x[0];
+//                 lastpos[1] = tp_dev.y[0];
+
+//                 if (pcnt < 200) /* 总点数少于200 */
+//                 {
+//                     if (pcnt)
+//                     {
+//                         if ((ncr_input_buf[pcnt - 1].y != tp_dev.y[0]) && (ncr_input_buf[pcnt - 1].x != tp_dev.x[0])) /* x,y不相等 */
+//                         {
+//                             ncr_input_buf[pcnt].x = tp_dev.x[0];
+//                             ncr_input_buf[pcnt].y = tp_dev.y[0];
+//                             pcnt++;
+//                         }
+//                     }
+//                     else
+//                     {
+//                         ncr_input_buf[pcnt].x = tp_dev.x[0];
+//                         ncr_input_buf[pcnt].y = tp_dev.y[0];
+//                         pcnt++;
+//                     }
+//                 }
+//             }
+//         }
+//         else    /* 按键松开了 */
+//         {
+//             lastpos[0] = 0XFFFF;
+//             tcnt++;
+//             delay_ms(10);
+//             /* 延时识别 */
+//             i++;
+
+//             if (tcnt == 40)
+//             {
+//                 if (pcnt)   /* 有有效的输入 */
+//                 {
+//                     printf("总点数:%d\r\n", pcnt);
+//                     alientek_ncr(ncr_input_buf, pcnt, 6, mode, sbuf);
+//                     printf("识别结果:%s\r\n", sbuf);
+//                     pcnt = 0; 
+//                     lcd_show_string(60 + 72, 90, 200, 16, 16, sbuf, BLUE);
+//                 }
+
+//                 lcd_fill(20, 115, lcddev.width - 20 - 1, lcddev.height - 5 - 1, WHITE);
+//             }
+//         }
+
+//         if (i == 30)
+//         {
+//             i = 0;
+//             LED0_TOGGLE();
+//         }
+//     }
 	/******************************************************
 	IIC点亮OLED实验
 	*******************************************************/

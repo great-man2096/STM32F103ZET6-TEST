@@ -19,7 +19,10 @@
 			"gui_paint.h": "c",
 			"fonts.h": "c",
 			"vector": "c",
-			"malloc.h": "c"
+			"malloc.h": "c",
+			"atk_ncr.h": "c",
+			"oled.h": "c",
+			"pyinput.h": "c"
 		}
 	}
 }

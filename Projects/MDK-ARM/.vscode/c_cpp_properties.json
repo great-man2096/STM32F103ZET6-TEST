@@ -48,6 +48,8 @@
                 "d:\\MDKProjects\\test02\\Middlewares\\FATFS\\exfuns",
                 "d:\\MDKProjects\\test02\\Middlewares\\TEXT",
                 "d:\\MDKProjects\\test02\\Middlewares\\PICTURE",
+                "d:\\MDKProjects\\test02\\Middlewares\\ATKNCR",
+                "d:\\MDKProjects\\test02\\Middlewares\\T9INPUT",
                 "d:\\MDKProjects\\test02\\Drivers\\CMSIS\\Lib\\ARM"
             ],
             "defines": [

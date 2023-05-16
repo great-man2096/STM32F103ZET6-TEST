@@ -80,9 +80,9 @@
             <nStopB2X>0</nStopB2X>
           </BeforeMake>
           <AfterMake>
-            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>fromelf --bin -o ..\..\Output\@L.bin ..\..\Output\%L</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -850,6 +850,21 @@
               <FileName>myffunicode.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Middlewares\FATFS\exfuns\myffunicode.c</FilePath>
+            </File>
+            <File>
+              <FileName>atk_ncr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\ATKNCR\atk_ncr.c</FilePath>
+            </File>
+            <File>
+              <FileName>ATKNCR_M_V2.0.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\Middlewares\ATKNCR\ATKNCR_M_V2.0.lib</FilePath>
+            </File>
+            <File>
+              <FileName>pyinput.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\T9INPUT\pyinput.c</FilePath>
             </File>
           </Files>
         </Group>
