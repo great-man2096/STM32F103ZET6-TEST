@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE,ARM_MATH_CM3,__CC_ARM,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers;..\..\User;..\..\Middlewares</IncludePath>
+              <IncludePath>..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers;..\..\User;..\..\Middlewares;..\..\Middlewares\USB\STM32_USB_Device_Library\Core\Inc;..\..\Middlewares\USB\STM32_USB_Device_Library\Class\CDC\Inc;..\..\Middlewares\USB\USB_APP;..\..\Middlewares\USB\STM32_USB_Device_Library\Class\MSC\Inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -577,6 +577,21 @@
               <FileName>stm32f1xx_ll_sdmmc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_ll_sdmmc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1xx_ll_usb.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_ll_usb.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1xx_hal_pcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_pcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1xx_hal_pcd_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_pcd_ex.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -875,6 +890,81 @@
               <FileName>arm_cortexM3l_math.lib</FileName>
               <FileType>4</FileType>
               <FilePath>..\..\Drivers\CMSIS\Lib\ARM\arm_cortexM3l_math.lib</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Middlewares/USB_CORE</GroupName>
+          <Files>
+            <File>
+              <FileName>usbd_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\STM32_USB_Device_Library\Core\Src\usbd_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_ctlreq.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\STM32_USB_Device_Library\Core\Src\usbd_ctlreq.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_ioreq.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\STM32_USB_Device_Library\Core\Src\usbd_ioreq.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Middlewares/USB_CLASS</GroupName>
+          <Files>
+            <File>
+              <FileName>usbd_cdc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\STM32_USB_Device_Library\Class\CDC\Src\usbd_cdc.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_msc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_msc_bot.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_bot.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_msc_data.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_data.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_msc_scsi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_scsi.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Middlewares/USB_APP</GroupName>
+          <Files>
+            <File>
+              <FileName>usbd_cdc_interface.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\USB_APP\usbd_cdc_interface.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_conf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\USB_APP\usbd_conf.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_desc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\USB_APP\usbd_desc.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_storage.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\USB\USB_APP\usbd_storage.c</FilePath>
             </File>
           </Files>
         </Group>

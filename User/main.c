@@ -56,6 +56,12 @@
 #include "./TEXT/fonts.h"
 #include "./ATKNCR/atk_ncr.h"
 #include "./T9INPUT/pyinput.h"
+#include "usbd_core.h"
+#include "usbd_desc.h"
+#include "usbd_cdc.h"
+#include "usbd_cdc_interface.h"
+#include "usbd_msc.h"
+#include "usbd_storage.h"
 
 //	extern uint8_t g_timxchy_cap_sta; //输入捕获状态
 //	extern uint16_t g_timxchy_cap_val; //输入捕获值
@@ -110,10 +116,12 @@ void showtime(void)
 // const char *SRAM_NAME_BUF[SRAMBANK] = {" SRAMIN ", " SRAMEX "};
 /* 最大记录的轨迹点数(输入数据) */
 // atk_ncr_point ncr_input_buf[200];
-extern uint16_t kbdxsize;  /* 虚拟键盘按键宽度 */
-extern uint16_t kbdysize;  /* 虚拟键盘按键高度 */
+// extern uint16_t kbdxsize;  /* 虚拟键盘按键宽度 */
+// extern uint16_t kbdysize;  /* 虚拟键盘按键高度 */
 
-
+USBD_HandleTypeDef USBD_Device;             /* USB Device处理结构体 */
+extern volatile uint8_t g_device_state;     /* USB连接 情况 */
+extern volatile uint8_t g_usb_state_reg;    /* USB状态 */
 
 int main(void)
 {
@@ -128,155 +136,349 @@ int main(void)
 	lcd_init();							/* LCD初始化 */
 
 	tp_dev.init();              		/* 初始化触摸屏 */
-	// my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
-	norflash_init();            		/* 初始化NORFLASH */
+	my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
+	// norflash_init();            		/* 初始化NORFLASH */
 	exfuns_init();                      /* 为fatfs相关变量申请内存 */
 	f_mount(fs[0], "0:", 1);            /* 挂载SD卡 */
 	f_mount(fs[1], "1:", 1);            /* 挂载FLASH */
+
 	/******************************************************
-	T9 拼音输入法实验
+	USB 读卡器实验
 	*******************************************************/
-	uint8_t i = 0;
-    uint8_t result_num;
-    uint8_t cur_index;
-    uint8_t key;
-    uint8_t temp;
-    uint8_t inputstr[7];                        /* 最大输入6个字符+结束符 */
-    uint8_t inputlen;                           /* 输入长度 */
-    
-RESTART:
-    while (fonts_init())                        /* 检查字库 */
+    uint8_t offline_cnt = 0;
+    uint8_t tct = 0;
+    uint8_t usb_sta;
+    uint8_t device_sta;
+    uint16_t id;
+	lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+    lcd_show_string(30, 70, 200, 16, 16, "USB Card Reader TEST", RED);
+    lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+
+    if (sd_init())  /* 初始化SD卡 */
     {
-        lcd_show_string(60, 50, 200, 16, 16, "Font Error!", RED);
-        delay_ms(200);
-        lcd_fill(60, 50, 240, 66, WHITE);   /* 清除显示 */
-        delay_ms(200);
+        lcd_show_string(30, 110, 200, 16, 16, "SD Card Error!", RED);   /* 检测SD卡错误 */
+    }
+    else     /* SD 卡正常 */
+    {
+        lcd_show_string(30, 110, 200, 16, 16, "SD Card Size:     MB", RED);
+        lcd_show_num(134, 110, SD_TOTAL_SIZE_MB(&g_sdcard_handler), 5, 16, RED);  /* 显示SD卡容量 */
     }
 
-    text_show_string(30, 5, 200, 16, "正点原子STM32开发板", 16, 0, RED);
-    text_show_string(30, 25, 200, 16, "拼音输入法实验", 16, 0, RED);
-    text_show_string(30, 45, 200, 16, "正点原子@ALIENTEK", 16, 0, RED);
-    text_show_string(30, 65, 200, 16, "KEY_UP:校准", 16, 0, RED);
-    text_show_string(30, 85, 200, 16, "KEY0:翻页  KEY1:清除", 16, 0, RED);
-    text_show_string(30, 105, 200, 16, "输入:        匹配:  ", 16, 0, RED);
-    text_show_string(30, 125, 200, 16, "拼音:        当前:  ", 16, 0, RED);
-    text_show_string(30, 145, 210, 32, "结果:", 16, 0, RED);
-
-    /* 根据LCD分辨率设置按键大小 */
-    if (lcddev.id == 0X5310)
+    id = norflash_read_id();
+    if ((id == 0) || (id == 0XFFFF))
     {
-        kbdxsize = 86;    
-        kbdysize = 43;
+        lcd_show_string(30, 110, 200, 16, 16, "NorFlash Error!", RED);  /* 检测NorFlash错误 */
     }
-    else if (lcddev.id == 0X5510)
+    else   /* SPI FLASH 正常 */
     {
-        kbdxsize = 140;
-        kbdysize = 70;
-    }
-    else
-    {
-        kbdxsize = 60;
-        kbdysize = 40;
+        lcd_show_string(30, 130, 200, 16, 16, "SPI FLASH Size:12MB", RED);
     }
 
-    py_load_ui(30, 195);
-    my_mem_set(inputstr, 0, 7); /* 全部清零 */
-    inputlen = 0;   /* 输入长度为0 */
-    result_num = 0; /* 总匹配数清零 */
-    cur_index = 0;
+    usbd_port_config(0);    /* USB先断开 */
+    delay_ms(500);
+    usbd_port_config(1);    /* USB再次连接 */
+    delay_ms(500);
+
+    lcd_show_string(30, 170, 200, 16, 16, "USB Connecting...", RED);    /* 提示正在建立连接 */
+    USBD_Init(&USBD_Device, &MSC_Desc, 0);                      /* 初始化USB */
+    USBD_RegisterClass(&USBD_Device, USBD_MSC_CLASS);           /* 添加类 */
+    USBD_MSC_RegisterStorage(&USBD_Device, &USBD_DISK_fops);    /* 为MSC类添加回调函数 */
+    USBD_Start(&USBD_Device);                                   /* 开启USB */
+    delay_ms(1800);
 
     while (1)
     {
-        i++;
-        delay_ms(10);
-        key = py_get_keynum(30, 195);
+        delay_ms(1);
 
-        if (key)
+        if (usb_sta != g_usb_state_reg)   /* 状态改变了 */
         {
-            if (key == 1)   /* 删除 */
-            {
-                if (inputlen)inputlen--;
+            lcd_fill(30, 190, 240, 210 + 16, WHITE); /* 清除显示 */
 
-                inputstr[inputlen] = '\0';      /* 添加结束符 */
+            if (g_usb_state_reg & 0x01)   /* 正在写 */
+            {
+                LED1(0);
+                lcd_show_string(30, 190, 200, 16, 16, "USB Writing...", RED); /* 提示USB正在写入数据 */
+            }
+
+            if (g_usb_state_reg & 0x02)   /* 正在读 */
+            {
+                LED1(0);
+                lcd_show_string(30, 190, 200, 16, 16, "USB Reading...", RED); /* 提示USB正在读出数据 */
+            }
+
+            if (g_usb_state_reg & 0x04)
+            {
+                lcd_show_string(30, 210, 200, 16, 16, "USB Write Err ", RED); /* 提示写入错误 */
             }
             else
             {
-                inputstr[inputlen] = key + '0'; /* 输入字符 */
-
-                if (inputlen < 7)inputlen++;
+                lcd_fill(30, 210, 240, 230 + 16, WHITE); /* 清除显示 */
             }
-
-            if (inputstr[0] != NULL)
+            
+            if (g_usb_state_reg & 0x08)
             {
-                temp = t9.getpymb(inputstr);     /* 得到匹配的结果数 */
-
-                if (temp)   /* 有部分匹配/完全匹配的结果 */
-                {
-                    result_num = temp & 0X7F;   /* 总匹配结果 */
-                    cur_index = 1;              /* 当前为第一个索引 */
-
-                    if (temp & 0X80)            /* 是部分匹配 */
-                    {
-                        inputlen = temp & 0X7F; /* 有效匹配位数 */
-                        inputstr[inputlen] = '\0';  /* 不匹配的位数去掉 */
-
-                        if (inputlen > 1)
-                        {
-                            temp = t9.getpymb(inputstr);    /* 重新获取完全匹配字符数 */
-                            result_num = (temp & 0X80)? 0 : (temp & 0X7F); /* 如果还是部分匹配, 直接匹配数为0, 否则表示匹配数量 */
-                        }
-                    }
-                }
-                else    /* 没有任何匹配 */
-                {
-                    inputlen--;
-                    inputstr[inputlen] = '\0';
-                }
+                lcd_show_string(30, 230, 200, 16, 16, "USB Read  Err ", RED); /* 提示读出错误 */
             }
             else
             {
-                cur_index = 0;
-                result_num = 0;
+                lcd_fill(30, 230, 240, 250 + 16, WHITE); /* 清除显示 */
             }
-
-            lcd_fill(30 + 40, 105, 30 + 40 + 48, 110 + 16, WHITE);      /* 清除之前的显示 */
-            lcd_show_num(30 + 144, 105, result_num, 1, 16, BLUE);       /* 显示匹配的结果数 */
-            text_show_string(30 + 40, 105, 200, 16, (char *)inputstr, 16, 0, BLUE); /* 显示有效的数字串 */
-            py_show_result(cur_index);  /* 显示第cur_index的匹配结果 */
+            
+            usb_sta = g_usb_state_reg; /* 记录最后的状态 */
         }
 
-		if (key4_scan() && tp_dev.touchtype == 0) /* KEYUP按下,且是电阻屏 */
-		{
-			tp_dev.adjust();
-			lcd_clear(WHITE);
-			goto RESTART;
-		}
-
-		if (key1_scan())
-		{					/* 下翻 */
-			if (result_num) /* 存在匹配的结果 */
-			{
-				if (cur_index < result_num)
-					cur_index++;
-				else
-					cur_index = 1;
-
-				py_show_result(cur_index); /* 显示第cur_index的匹配结果 */
-			}
-		}
-
-		if (key2_scan()) /* 清除输入 */
-		{
-			lcd_fill(30 + 40, 145, lcddev.width - 1, 145 + 48, WHITE); /* 清除之前的显示 */
-			goto RESTART;
-		}
-
-		if (i == 30)
+        if (device_sta != g_device_state)
         {
-            i = 0;
-            LED0_TOGGLE();
+            if (g_device_state == 1)
+            {
+                lcd_show_string(30, 170, 200, 16, 16, "USB Connected    ", RED);    /* 提示USB连接已经建立 */
+            }
+            else
+            {
+                lcd_show_string(30, 170, 200, 16, 16, "USB DisConnected ", RED);    /* 提示USB被拔出了 */
+            }
+            
+            device_sta = g_device_state;
+        }
+
+        tct++;
+
+        if (tct == 200)
+        {
+            tct = 0;
+            LED1(1);        /* 关闭 LED1 */
+            LED0_TOGGLE();  /* LED0 闪烁 */
+
+            if (g_usb_state_reg & 0x10)
+            {
+                offline_cnt = 0;    /* USB连接了,则清除offline计数器 */
+                g_device_state = 1;
+            }
+            else    /* 没有得到轮询 */
+            {
+                offline_cnt++;
+
+                if (offline_cnt > 100)
+                {
+                    g_device_state = 0;/* 20s内没收到在线标记,代表USB被拔出了 */
+                }
+            }
+
+            g_usb_state_reg = 0;
         }
     }
+
+	/******************************************************
+	USB 虚拟串口实验
+	*******************************************************/
+	// uint16_t len;
+    // uint16_t times = 0;
+    // uint8_t usbstatus = 0;
+	// lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+    // lcd_show_string(30, 70, 200, 16, 16, "USB Virtual USART TEST", RED);
+    // lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    // lcd_show_string(30, 110, 200, 16, 16, "USB Connecting...", RED); /* 提示USB开始连接 */
+
+    // usbd_port_config(0);    /* USB先断开 */
+    // delay_ms(500);
+    // usbd_port_config(1);    /* USB再次连接 */
+    // delay_ms(500);
+
+    // USBD_Init(&USBD_Device, &VCP_Desc, 0);
+    // USBD_RegisterClass(&USBD_Device, USBD_CDC_CLASS);
+    // USBD_CDC_RegisterInterface(&USBD_Device, &USBD_CDC_fops);
+    // USBD_Start(&USBD_Device);
+
+    // while (1)
+    // {
+    //     if (usbstatus != g_device_state)   /* USB连接状态发生了改变 */
+    //     {
+    //         usbstatus = g_device_state; /* 记录新的状态 */
+
+    //         if (usbstatus == 1)
+    //         {
+    //             lcd_show_string(30, 110, 200, 16, 16, "USB Connected    ", RED); /* 提示USB连接成功 */
+    //             LED1(0);    /* 绿灯亮 */
+    //         }
+    //         else
+    //         {
+    //             lcd_show_string(30, 110, 200, 16, 16, "USB disConnected ", RED); /* 提示USB断开 */
+    //             LED1(1);    /* 绿灯灭 */
+    //         }
+    //     }
+
+    //     if (g_usb_usart_rx_sta & 0x8000)
+    //     {
+    //         len = g_usb_usart_rx_sta & 0x3FFF;  /* 得到此次接收到的数据长度 */
+    //         usb_printf("\r\n您发送的消息长度为:%d\r\n\r\n", len);
+    //         cdc_vcp_data_tx(g_usb_usart_rx_buffer, len);;
+    //         usb_printf("\r\n\r\n");/* 插入换行 */
+    //         g_usb_usart_rx_sta = 0;
+    //     }
+    //     else
+    //     {
+    //         times++;
+
+    //         if (times % 5000 == 0)
+    //         {
+    //             usb_printf("\r\nSTM32开发板USB虚拟串口实验\r\n");
+    //             usb_printf("正点原子@ALIENTEK\r\n\r\n");
+    //         }
+
+    //         if (times % 200 == 0)usb_printf("请输入数据,以回车键结束\r\n");
+
+    //         if (times % 30 == 0)
+    //         {
+    //             LED0_TOGGLE();  /* 闪烁LED,提示系统正在运行 */
+    //         }
+            
+    //         delay_ms(10);
+    //     }
+    // }
+	/******************************************************
+	T9 拼音输入法实验
+	*******************************************************/
+// 	uint8_t i = 0;
+//     uint8_t result_num;
+//     uint8_t cur_index;
+//     uint8_t key;
+//     uint8_t temp;
+//     uint8_t inputstr[7];                        /* 最大输入6个字符+结束符 */
+//     uint8_t inputlen;                           /* 输入长度 */
+    
+// RESTART:
+//     while (fonts_init())                        /* 检查字库 */
+//     {
+//         lcd_show_string(60, 50, 200, 16, 16, "Font Error!", RED);
+//         delay_ms(200);
+//         lcd_fill(60, 50, 240, 66, WHITE);   /* 清除显示 */
+//         delay_ms(200);
+//     }
+
+//     text_show_string(30, 5, 200, 16, "正点原子STM32开发板", 16, 0, RED);
+//     text_show_string(30, 25, 200, 16, "拼音输入法实验", 16, 0, RED);
+//     text_show_string(30, 45, 200, 16, "正点原子@ALIENTEK", 16, 0, RED);
+//     text_show_string(30, 65, 200, 16, "KEY_UP:校准", 16, 0, RED);
+//     text_show_string(30, 85, 200, 16, "KEY0:翻页  KEY1:清除", 16, 0, RED);
+//     text_show_string(30, 105, 200, 16, "输入:        匹配:  ", 16, 0, RED);
+//     text_show_string(30, 125, 200, 16, "拼音:        当前:  ", 16, 0, RED);
+//     text_show_string(30, 145, 210, 32, "结果:", 16, 0, RED);
+
+//     /* 根据LCD分辨率设置按键大小 */
+//     if (lcddev.id == 0X5310)
+//     {
+//         kbdxsize = 86;    
+//         kbdysize = 43;
+//     }
+//     else if (lcddev.id == 0X5510)
+//     {
+//         kbdxsize = 140;
+//         kbdysize = 70;
+//     }
+//     else
+//     {
+//         kbdxsize = 60;
+//         kbdysize = 40;
+//     }
+
+//     py_load_ui(30, 195);
+//     my_mem_set(inputstr, 0, 7); /* 全部清零 */
+//     inputlen = 0;   /* 输入长度为0 */
+//     result_num = 0; /* 总匹配数清零 */
+//     cur_index = 0;
+
+//     while (1)
+//     {
+//         i++;
+//         delay_ms(10);
+//         key = py_get_keynum(30, 195);
+
+//         if (key)
+//         {
+//             if (key == 1)   /* 删除 */
+//             {
+//                 if (inputlen)inputlen--;
+
+//                 inputstr[inputlen] = '\0';      /* 添加结束符 */
+//             }
+//             else
+//             {
+//                 inputstr[inputlen] = key + '0'; /* 输入字符 */
+
+//                 if (inputlen < 7)inputlen++;
+//             }
+
+//             if (inputstr[0] != NULL)
+//             {
+//                 temp = t9.getpymb(inputstr);     /* 得到匹配的结果数 */
+
+//                 if (temp)   /* 有部分匹配/完全匹配的结果 */
+//                 {
+//                     result_num = temp & 0X7F;   /* 总匹配结果 */
+//                     cur_index = 1;              /* 当前为第一个索引 */
+
+//                     if (temp & 0X80)            /* 是部分匹配 */
+//                     {
+//                         inputlen = temp & 0X7F; /* 有效匹配位数 */
+//                         inputstr[inputlen] = '\0';  /* 不匹配的位数去掉 */
+
+//                         if (inputlen > 1)
+//                         {
+//                             temp = t9.getpymb(inputstr);    /* 重新获取完全匹配字符数 */
+//                             result_num = (temp & 0X80)? 0 : (temp & 0X7F); /* 如果还是部分匹配, 直接匹配数为0, 否则表示匹配数量 */
+//                         }
+//                     }
+//                 }
+//                 else    /* 没有任何匹配 */
+//                 {
+//                     inputlen--;
+//                     inputstr[inputlen] = '\0';
+//                 }
+//             }
+//             else
+//             {
+//                 cur_index = 0;
+//                 result_num = 0;
+//             }
+
+//             lcd_fill(30 + 40, 105, 30 + 40 + 48, 110 + 16, WHITE);      /* 清除之前的显示 */
+//             lcd_show_num(30 + 144, 105, result_num, 1, 16, BLUE);       /* 显示匹配的结果数 */
+//             text_show_string(30 + 40, 105, 200, 16, (char *)inputstr, 16, 0, BLUE); /* 显示有效的数字串 */
+//             py_show_result(cur_index);  /* 显示第cur_index的匹配结果 */
+//         }
+
+// 		if (key4_scan() && tp_dev.touchtype == 0) /* KEYUP按下,且是电阻屏 */
+// 		{
+// 			tp_dev.adjust();
+// 			lcd_clear(WHITE);
+// 			goto RESTART;
+// 		}
+
+// 		if (key1_scan())
+// 		{					/* 下翻 */
+// 			if (result_num) /* 存在匹配的结果 */
+// 			{
+// 				if (cur_index < result_num)
+// 					cur_index++;
+// 				else
+// 					cur_index = 1;
+
+// 				py_show_result(cur_index); /* 显示第cur_index的匹配结果 */
+// 			}
+// 		}
+
+// 		if (key2_scan()) /* 清除输入 */
+// 		{
+// 			lcd_fill(30 + 40, 145, lcddev.width - 1, 145 + 48, WHITE); /* 清除之前的显示 */
+// 			goto RESTART;
+// 		}
+
+// 		if (i == 30)
+//         {
+//             i = 0;
+//             LED0_TOGGLE();
+//         }
+//     }
 
 	/******************************************************
 	手写识别实验
