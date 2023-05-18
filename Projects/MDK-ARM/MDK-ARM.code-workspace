@@ -22,7 +22,26 @@
 			"malloc.h": "c",
 			"atk_ncr.h": "c",
 			"oled.h": "c",
-			"pyinput.h": "c"
+			"pyinput.h": "c",
+			"array": "c",
+			"string_view": "c",
+			"initializer_list": "c",
+			"utility": "c",
+			"deque": "c",
+			"queue": "c",
+			"string": "c",
+			"uc-os2_demo.h": "c",
+			"ucos_ii.h": "c",
+			"os.h": "c",
+			"led.h": "c",
+			"app_cfg.h": "c",
+			"cpu.h": "c",
+			"stm32f1xx.h": "c",
+			"stm32f103xe.h": "c",
+			"core_cm3.h": "c",
+			"cmsis_compiler.h": "c",
+			"cmsis_armclang.h": "c",
+			"cmsis_gcc.h": "c"
 		}
 	}
 }

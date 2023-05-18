@@ -712,6 +712,7 @@ void Paint_DrawString_CN(UWORD Xstart, UWORD Ystart, const char * pString, cFONT
     }
 }
 
+#define  ARRAY_LEN 255
 /******************************************************************************
 function:	Display nummber
 parameter:
@@ -723,7 +724,6 @@ parameter:
     Color_Foreground : Select the foreground color
     Color_Background : Select the background color
 ******************************************************************************/
-#define  ARRAY_LEN 255
 void Paint_DrawNum(UWORD Xpoint, UWORD Ypoint, double Nummber,
                    sFONT* Font, UWORD Digit,UWORD Color_Foreground, UWORD Color_Background)
 {

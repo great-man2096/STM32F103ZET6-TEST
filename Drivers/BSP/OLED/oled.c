@@ -66,6 +66,8 @@ void OLED_Init()
     //Turn on the OLED display
     OLED_1in3_WriteReg(0xaf);
 
+    delay_ms(500);
+
 }
 
 

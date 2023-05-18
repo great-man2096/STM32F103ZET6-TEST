@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE,ARM_MATH_CM3,__CC_ARM,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers;..\..\User;..\..\Middlewares;..\..\Middlewares\USB\STM32_USB_Device_Library\Core\Inc;..\..\Middlewares\USB\STM32_USB_Device_Library\Class\CDC\Inc;..\..\Middlewares\USB\USB_APP;..\..\Middlewares\USB\STM32_USB_Device_Library\Class\MSC\Inc</IncludePath>
+              <IncludePath>..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers;..\..\User;..\..\Middlewares;..\..\Middlewares\USB\STM32_USB_Device_Library\Core\Inc;..\..\Middlewares\USB\STM32_USB_Device_Library\Class\CDC\Inc;..\..\Middlewares\USB\USB_APP;..\..\Middlewares\USB\STM32_USB_Device_Library\Class\MSC\Inc;..\..\Middlewares\uC-OS2\uC-CPU\ARM-Cortex-M\ARMv7-M\ARM;..\..\Middlewares\uC-OS2\uC-CPU\Cfg\Template;..\..\Middlewares\uC-OS2\uC-CPU;..\..\Middlewares\uC-OS2\uC-LIB\Cfg\Template;..\..\Middlewares\uC-OS2\uC-LIB;..\..\Middlewares\uC-OS2\uC-OS2\Ports\ARM-Cortex-M\ARMv7-M\ARM;..\..\Middlewares\uC-OS2\uC-OS2\Cfg\Template;..\..\Middlewares\uC-OS2\uC-OS2\Source</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

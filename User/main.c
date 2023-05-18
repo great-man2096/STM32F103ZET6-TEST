@@ -133,7 +133,8 @@ int main(void)
 	usmart_dev.init(72);				/* USMART初始化 */
 	key_init();							/* 初始化按键 */
 	rtc_init();							// RTC初始化
-	lcd_init();							/* LCD初始化 */
+	// lcd_init();							/* LCD初始化 */
+	OLED_Init();						/* OLED初始化 */	
 
 	tp_dev.init();              		/* 初始化触摸屏 */
 	my_mem_init(SRAMIN);                /* 初始化内部SRAM内存池 */
@@ -143,130 +144,154 @@ int main(void)
 	f_mount(fs[1], "1:", 1);            /* 挂载FLASH */
 
 	/******************************************************
-	USB 读卡器实验
+	USB 读卡器实验	
+	****** 上次未成功原因是跳线接错了，应该把PA11接D-，PA12接D+ ******
 	*******************************************************/
-    uint8_t offline_cnt = 0;
-    uint8_t tct = 0;
-    uint8_t usb_sta;
-    uint8_t device_sta;
-    uint16_t id;
-	lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
-    lcd_show_string(30, 70, 200, 16, 16, "USB Card Reader TEST", RED);
-    lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
+    // uint8_t offline_cnt = 0;
+    // uint8_t tct = 0;
+    // uint8_t usb_sta;
+    // uint8_t device_sta;
+    // uint16_t id;
 
-    if (sd_init())  /* 初始化SD卡 */
-    {
-        lcd_show_string(30, 110, 200, 16, 16, "SD Card Error!", RED);   /* 检测SD卡错误 */
-    }
-    else     /* SD 卡正常 */
-    {
-        lcd_show_string(30, 110, 200, 16, 16, "SD Card Size:     MB", RED);
-        lcd_show_num(134, 110, SD_TOTAL_SIZE_MB(&g_sdcard_handler), 5, 16, RED);  /* 显示SD卡容量 */
-    }
+	// // 0.Create a new image cache
+	// UBYTE *BlackImage;
+	// UWORD Imagesize = ((OLED_1IN3_WIDTH%8==0)? (OLED_1IN3_WIDTH/8): (OLED_1IN3_WIDTH/8+1)) * OLED_1IN3_HEIGHT;
+	// BlackImage = (UBYTE *)mymalloc(SRAMIN,Imagesize);
+	// printf("Paint_NewImage\r\n");
+	// Paint_NewImage(BlackImage, OLED_1IN3_WIDTH, OLED_1IN3_HEIGHT, 90, WHITE);	
+	// printf("Drawing\r\n");
+	// //1.Select Image
+	// Paint_SelectImage(BlackImage);
+	// delay_ms(500);
+	// Paint_Clear(WHITE);
+ 	// // Drawing on the image
+	// printf("Drawing:page \r\n");			
+	// Paint_DrawString_EN(10, 0, "STM32", &Font16, RED, BLACK);
+	// Paint_DrawString_EN(10, 17, "USB Card Reader TEST", &Font8, RED, BLACK);
 
-    id = norflash_read_id();
-    if ((id == 0) || (id == 0XFFFF))
-    {
-        lcd_show_string(30, 110, 200, 16, 16, "NorFlash Error!", RED);  /* 检测NorFlash错误 */
-    }
-    else   /* SPI FLASH 正常 */
-    {
-        lcd_show_string(30, 130, 200, 16, 16, "SPI FLASH Size:12MB", RED);
-    }
+	// lcd_show_string(30, 50, 200, 16, 16, "STM32", RED);
+    // lcd_show_string(30, 70, 200, 16, 16, "USB Card Reader TEST", RED);
+    // lcd_show_string(30, 90, 200, 16, 16, "ATOM@ALIENTEK", RED);
 
-    usbd_port_config(0);    /* USB先断开 */
-    delay_ms(500);
-    usbd_port_config(1);    /* USB再次连接 */
-    delay_ms(500);
+    // if (sd_init())  /* 初始化SD卡 */
+    // {
+	// 	Paint_DrawString_EN(10, 30, "SD Card Error!", &Font12, RED, BLACK);
+    //     lcd_show_string(30, 110, 200, 16, 16, "SD Card Error!", RED);   /* 检测SD卡错误 */
+    // }
+    // else     /* SD 卡正常 */
+    // {
+    //     lcd_show_string(30, 110, 200, 16, 16, "SD Card Size:     MB", RED);
+	// 	Paint_DrawString_EN(10, 30, "SD Card Size:     MB", &Font12, RED, BLACK);
+    //     lcd_show_num(134, 110, SD_TOTAL_SIZE_MB(&g_sdcard_handler), 5, 16, RED);  /* 显示SD卡容量 */
+	// 	Paint_DrawNum(30, 30, SD_TOTAL_SIZE_MB(&g_sdcard_handler), &Font12, 4, WHITE, WHITE);
+    // }
 
-    lcd_show_string(30, 170, 200, 16, 16, "USB Connecting...", RED);    /* 提示正在建立连接 */
-    USBD_Init(&USBD_Device, &MSC_Desc, 0);                      /* 初始化USB */
-    USBD_RegisterClass(&USBD_Device, USBD_MSC_CLASS);           /* 添加类 */
-    USBD_MSC_RegisterStorage(&USBD_Device, &USBD_DISK_fops);    /* 为MSC类添加回调函数 */
-    USBD_Start(&USBD_Device);                                   /* 开启USB */
-    delay_ms(1800);
+    // id = norflash_read_id();
+    // if ((id == 0) || (id == 0XFFFF))
+    // {
+    //     lcd_show_string(30, 110, 200, 16, 16, "NorFlash Error!", RED);  /* 检测NorFlash错误 */
+    // }
+    // else   /* SPI FLASH 正常 */
+    // {
+    //     lcd_show_string(30, 130, 200, 16, 16, "SPI FLASH Size:12MB", RED);
+    // }
 
-    while (1)
-    {
-        delay_ms(1);
+    // usbd_port_config(0);    /* USB先断开 */
+    // delay_ms(500);
+    // usbd_port_config(1);    /* USB再次连接 */
+    // delay_ms(500);
 
-        if (usb_sta != g_usb_state_reg)   /* 状态改变了 */
-        {
-            lcd_fill(30, 190, 240, 210 + 16, WHITE); /* 清除显示 */
+    // lcd_show_string(30, 170, 200, 16, 16, "USB Connecting...", RED);    /* 提示正在建立连接 */
+    // USBD_Init(&USBD_Device, &MSC_Desc, 0);                      /* 初始化USB */
+    // USBD_RegisterClass(&USBD_Device, USBD_MSC_CLASS);           /* 添加类 */
+    // USBD_MSC_RegisterStorage(&USBD_Device, &USBD_DISK_fops);    /* 为MSC类添加回调函数 */
+    // USBD_Start(&USBD_Device);                                   /* 开启USB */
+    // delay_ms(1800);
 
-            if (g_usb_state_reg & 0x01)   /* 正在写 */
-            {
-                LED1(0);
-                lcd_show_string(30, 190, 200, 16, 16, "USB Writing...", RED); /* 提示USB正在写入数据 */
-            }
+	// // Show image on page2
+	// OLED_1IN3_Display(BlackImage);
 
-            if (g_usb_state_reg & 0x02)   /* 正在读 */
-            {
-                LED1(0);
-                lcd_show_string(30, 190, 200, 16, 16, "USB Reading...", RED); /* 提示USB正在读出数据 */
-            }
+    // while (1)
+    // {
+    //     delay_ms(1);
 
-            if (g_usb_state_reg & 0x04)
-            {
-                lcd_show_string(30, 210, 200, 16, 16, "USB Write Err ", RED); /* 提示写入错误 */
-            }
-            else
-            {
-                lcd_fill(30, 210, 240, 230 + 16, WHITE); /* 清除显示 */
-            }
+    //     if (usb_sta != g_usb_state_reg)   /* 状态改变了 */
+    //     {
+    //         lcd_fill(30, 190, 240, 210 + 16, WHITE); /* 清除显示 */
+
+    //         if (g_usb_state_reg & 0x01)   /* 正在写 */
+    //         {
+    //             LED1(0);
+    //             lcd_show_string(30, 190, 200, 16, 16, "USB Writing...", RED); /* 提示USB正在写入数据 */
+    //         }
+
+    //         if (g_usb_state_reg & 0x02)   /* 正在读 */
+    //         {
+    //             LED1(0);
+    //             lcd_show_string(30, 190, 200, 16, 16, "USB Reading...", RED); /* 提示USB正在读出数据 */
+    //         }
+
+    //         if (g_usb_state_reg & 0x04)
+    //         {
+    //             lcd_show_string(30, 210, 200, 16, 16, "USB Write Err ", RED); /* 提示写入错误 */
+    //         }
+    //         else
+    //         {
+    //             lcd_fill(30, 210, 240, 230 + 16, WHITE); /* 清除显示 */
+    //         }
             
-            if (g_usb_state_reg & 0x08)
-            {
-                lcd_show_string(30, 230, 200, 16, 16, "USB Read  Err ", RED); /* 提示读出错误 */
-            }
-            else
-            {
-                lcd_fill(30, 230, 240, 250 + 16, WHITE); /* 清除显示 */
-            }
+    //         if (g_usb_state_reg & 0x08)
+    //         {
+    //             lcd_show_string(30, 230, 200, 16, 16, "USB Read  Err ", RED); /* 提示读出错误 */
+    //         }
+    //         else
+    //         {
+    //             lcd_fill(30, 230, 240, 250 + 16, WHITE); /* 清除显示 */
+    //         }
             
-            usb_sta = g_usb_state_reg; /* 记录最后的状态 */
-        }
+    //         usb_sta = g_usb_state_reg; /* 记录最后的状态 */
+    //     }
 
-        if (device_sta != g_device_state)
-        {
-            if (g_device_state == 1)
-            {
-                lcd_show_string(30, 170, 200, 16, 16, "USB Connected    ", RED);    /* 提示USB连接已经建立 */
-            }
-            else
-            {
-                lcd_show_string(30, 170, 200, 16, 16, "USB DisConnected ", RED);    /* 提示USB被拔出了 */
-            }
+    //     if (device_sta != g_device_state)
+    //     {
+    //         if (g_device_state == 1)
+    //         {
+    //             lcd_show_string(30, 170, 200, 16, 16, "USB Connected    ", RED);    /* 提示USB连接已经建立 */
+    //         }
+    //         else
+    //         {
+    //             lcd_show_string(30, 170, 200, 16, 16, "USB DisConnected ", RED);    /* 提示USB被拔出了 */
+    //         }
             
-            device_sta = g_device_state;
-        }
+    //         device_sta = g_device_state;
+    //     }
 
-        tct++;
+    //     tct++;
 
-        if (tct == 200)
-        {
-            tct = 0;
-            LED1(1);        /* 关闭 LED1 */
-            LED0_TOGGLE();  /* LED0 闪烁 */
+    //     if (tct == 200)
+    //     {
+    //         tct = 0;
+    //         LED1(1);        /* 关闭 LED1 */
+    //         LED0_TOGGLE();  /* LED0 闪烁 */
 
-            if (g_usb_state_reg & 0x10)
-            {
-                offline_cnt = 0;    /* USB连接了,则清除offline计数器 */
-                g_device_state = 1;
-            }
-            else    /* 没有得到轮询 */
-            {
-                offline_cnt++;
+    //         if (g_usb_state_reg & 0x10)
+    //         {
+    //             offline_cnt = 0;    /* USB连接了,则清除offline计数器 */
+    //             g_device_state = 1;
+    //         }
+    //         else    /* 没有得到轮询 */
+    //         {
+    //             offline_cnt++;
 
-                if (offline_cnt > 100)
-                {
-                    g_device_state = 0;/* 20s内没收到在线标记,代表USB被拔出了 */
-                }
-            }
+    //             if (offline_cnt > 100)
+    //             {
+    //                 g_device_state = 0;/* 20s内没收到在线标记,代表USB被拔出了 */
+    //             }
+    //         }
 
-            g_usb_state_reg = 0;
-        }
-    }
+    //         g_usb_state_reg = 0;
+    //     }
+    // }
 
 	/******************************************************
 	USB 虚拟串口实验
